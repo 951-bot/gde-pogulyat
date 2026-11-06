@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Где погулять — Интерактивные тропы Кирова</title>
+    <!-- Подключаем Tailwind CSS для современного дизайна -->
+    <script src="https://tailwindcss.com"></script>
+    <!-- Подключаем шрифты -->
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Подключаем Яндекс Карты -->
+    <script src="https://yandex.ru" type="text/javascript"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8F9FA; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+    </style>
+</head>
+<body class="h-screen overflow-hidden flex flex-col md:flex-row">
+
+    <!-- Боковая панель -->
+    <aside class="w-full md:w-[380px] h-[40vh] md:h-full bg-white shadow-xl z-10 flex flex-col transition-all duration-300 relative">
+        
+        <!-- Шапка -->
+        <header class="p-5 border-b border-gray-100 flex items-center justify-between">
+            <h1 class="text-xl font-bold text-emerald-800 tracking-tight flex items-center gap-2">
+                🌲 Где погулять
+            </h1>
+            <span class="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full">г. Киров</span>
+        </header>
+
+        <!-- Основной контейнер для контента -->
+        <div class="flex-1 overflow-y-auto custom-scroll p-4 position-relative">
+            
+            <!-- ЭКРАН 1: Список мест -->
+            <div id="list-screen" class="space-y-3">
+                <p class="text-sm text-gray-500 mb-4 px-1">Выберите лесную тропу или маршрут для прогулки:</p>
+                <div id="places-container" class="space-y-3">
+                    <!-- Карточки загружаются из JSON -->
+                    <div class="text-center py-8 text-gray-400">Загрузка мест...</div>
+                </div>
+            </div>
+
+            <!-- ЭКРАН 2: Статья (изначально скрыта) -->
+            <div id="article-screen" class="hidden">
+                <button onclick="goBack()" class="mb-4 flex items-center gap-2 text-sm font-medium text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-3 py-2 rounded-lg transition-colors">
+                    ← Назад к списку
+                </button>
+                <div id="article-content">
+                    <!-- Контент статьи загружается динамически -->
+                </div>
+            </div>
+
+        </div>
+    </aside>
+
+    <!-- Карта -->
+    <main id="map" class="flex-1 h-[60vh] md:h-full bg-slate-100"></main>
+
+    <script>
+        let map;
+        let placesData = [];
+        let placemarks = {};
+
+        // Инициализация карты Яндекс
+        ymaps.ready(initMap);
+
+        function initMap() {
+            map = new ymaps.Map("map", {
+                center: [58.6035, 49.6679], // Центр Кирова
+                zoom: 11,
+                controls: ['zoomControl', 'fullscreenControl']
+            });
+
+            // Загружаем данные из нашего JSON
+            fetch('data.json')
+                .then(response => response.json())
+                .then(data => {
+                    placesData = data;
+                    renderSidebarList(data);
+                    renderMapMarkers(data);
+                    
+                    // Обработка кнопки "Назад" в браузере
+                    window.onpopstate = function(event) {
+                        if (event.state && event.state.id) {
+                            showArticle(event.state.id, false);
+                        } else {
+                            showListScreen(false);
+                        }
+                    };
+                })
+                .catch(err => console.error('Ошибка загрузки данных:', err));
+        }
+
+        // Вывод списка в боковую панель
+        function renderSidebarList(data) {
+            const container = document.getElementById('places-container');
+            container.innerHTML = '';
+            
+            data.forEach(place => {
+                const card = document.createElement('div');
+                card.className = "p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-emerald-300 hover:bg-emerald-50/30 cursor-pointer transition-all";
+                card.onclick = () => showArticle(place.id);
+                card.innerHTML = `
+                    <h3 class="font-semibold text-gray-800 mb-1">${place.title}</h3>
+                    <div class="flex flex-wrap gap-2 text-xs text-gray-500 mb-2">
+                        <span>📏 ${place.distance}</span>
+                        <span>⏱️ ${place.duration}</span>
+                    </div>
+                    <p class="text-xs text-gray-600 line-clamp-2">${place.description}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Расстановка меток на карте
+        function renderMapMarkers(data) {
+            data.forEach(place => {
+                const placemark = new ymaps.Placemark(place.coordinates, {
+                    hintContent: place.title,
+                    balloonContent: place.title
+                }, {
+                    preset: 'islands#emeraldDarkCircleIcon'
+                });
+
+                placemark.events.add('click', () => {
+                    showArticle(place.id);
+                });
+
+                map.geoObjects.add(placemark);
+                placemarks[place.id] = placemark;
+            });
+        }
+
+        // Показ экрана статьи
+        function showArticle(id, pushState = true) {
+            const place = placesData.find(p => p.id === id);
+            if (!place) return;
+
+            // Меняем экраны
+            document.getElementById('list-screen').classList.add('hidden');
+            document.getElementById('article-screen').classList.remove('hidden');
+
+            // Наполняем статью
+            document.getElementById('article-content').innerHTML = `
+                <h2 class="text-2xl font-bold text-gray-900 mb-3">${place.title}</h2>
+                
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <div class="bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                        <span class="block text-[10px] text-gray-400 uppercase font-bold tracking-wider">Дистанция</span>
+                        <span class="text-sm font-semibold text-gray-700">📏 ${place.distance}</span>
+                    </div>
+                    <div class="bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                        <span class="block text-[10px] text-gray-400 uppercase font-bold tracking-wider">Время</span>
+                        <span class="text-sm font-semibold text-gray-700">⏱️ ${place.duration}</span>
+                    </div>
+                    <div class="bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                        <span class="block text-[10px] text-gray-400 uppercase font-bold tracking-wider">Сложность</span>
+                        <span class="text-sm font-semibold text-emerald-700">🟢 ${place.difficulty}</span>
+                    </div>
+                </div>
+
+                <p class="text-sm text-gray-700 leading-relaxed mb-6">${place.description}</p>
+                
+                <a href="${place.geoLink}" target="_blank" class="block text-center w-full bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-3 px-4 rounded-xl text-sm transition-colors shadow-md">
+                    🗺️ Построить маршрут на картах
+                </a>
+            `;
+
+            // Центрируем карту на выбранном месте
+            map.setCenter(place.coordinates, 14, { checkZoomRange: true, duration: 300 });
+
+            // Добавляем запись в историю браузера, чтобы работала кнопка "Назад" смартфона
+            if (pushState) {
+                history.pushState({ id: id }, place.title, `?route=${id}`);
+            }
+        }
+
+        // Возврат к списку
+        function goBack() {
+            showListScreen(true);
+        }
+
+        function showListScreen(pushState = true) {
+            document.getElementById('list-screen').classList.remove('hidden');
+            document.getElementById('article-screen').classList.add('hidden');
+            
+            // Сбрасываем карту на общий вид Кирова
+            map.setCenter([58.6035, 49.6679], 11, { duration: 300 });
+
+            if (pushState) {
+                history.pushState(null, 'Где погулять', window.location.pathname);
+            }
+        }
+    </script>
+</body>
+</html>
