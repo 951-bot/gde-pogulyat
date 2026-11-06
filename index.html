@@ -203,10 +203,27 @@
             margin-left: 10px;
         }
 
+        /* Полностью переработанные стили под мобильные экраны */
         @media (max-width: 900px) {
-            .layout { grid-template-columns: 1fr; grid-template-rows: 50vh 50vh; }
-            .sidebar { order: 2; }
-            .map-container { order: 1; }
+            .layout {
+                display: flex;
+                flex-direction: column;
+                height: auto;
+                overflow: initial;
+            }
+            .map-container {
+                width: 100%;
+                height: 350px; /* Фиксированная высота карты на смартфонах */
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                overflow: initial;
+            }
         }
     </style>
 </head>
@@ -303,6 +320,7 @@
 
     function getRoutes() {
         const local = localStorage.getItem('kirov_routes');
+        // Жесткая проверка: если в кэше пусто или меньше 3 троп, принудительно затираем дефолтными данными
         if (!local || JSON.parse(local).routes.length < 3) {
             localStorage.setItem('kirov_routes', JSON.stringify(defaultData));
             return defaultData;
@@ -375,6 +393,8 @@
         if (newIdx < 0) newIdx = slides.length - 1;
         slides[newIdx].classList.add('active');
     }
+</script>
+<script>
     function initMap() {
         myMap = new ymaps.Map("map", {
             center: [58.615, 49.670],
