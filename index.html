@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Пешие маршруты Кирова</title>
+    <!-- Подключаем API Яндекс Карт (для работы на Vercel желательно вставить свой apikey в ссылку) -->
     <script src="https://yandex.ru" type="text/javascript"></script>
     <style>
         :root {
@@ -136,6 +137,17 @@
         .map-container {
             width: 100%;
             height: 100%;
+            position: relative;
+        }
+
+        .map-error-msg {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-muted);
+            font-size: 14px;
+            text-align: center;
+            padding: 20px;
         }
 
         .admin-panel {
@@ -204,23 +216,9 @@
         }
 
         @media (max-width: 900px) {
-            .layout {
-                display: flex;
-                flex-direction: column;
-                height: auto;
-            }
-            .map-container {
-                width: 100%;
-                height: 350px;
-                position: sticky;
-                top: 0;
-                z-index: 100;
-            }
-            .sidebar {
-                width: 100%;
-                height: auto;
-                border-right: none;
-            }
+            .layout { display: flex; flex-direction: column; height: auto; }
+            .map-container { width: 100%; height: 350px; position: sticky; top: 0; z-index: 100; background: #000; }
+            .sidebar { width: 100%; height: auto; border-right: none; }
         }
     </style>
 </head>
@@ -234,7 +232,9 @@
         </div>
         <div class="routes-list" id="routes-list"></div>
     </div>
-    <div class="map-container" id="map"></div>
+    <div class="map-container" id="map">
+        <div class="map-error-msg" id="map-status">Загрузка карты Яндекс...</div>
+    </div>
 </div>
 
 <div class="admin-panel" id="admin-panel">
@@ -279,7 +279,7 @@
     </div>
 </div>
 <script>
-    let myMap;
+    let myMap = null;
     const defaultData = {
         "routes": [
             {
@@ -316,17 +316,22 @@
     };
 
     function getRoutes() {
-        const local = localStorage.getItem('kirov_routes_v2');
-        if (!local) {
-            localStorage.setItem('kirov_routes_v2', JSON.stringify(defaultData));
+        try {
+            const local = localStorage.getItem('kirov_routes_v3');
+            if (!local) {
+                localStorage.setItem('kirov_routes_v3', JSON.stringify(defaultData));
+                return defaultData;
+            }
+            return JSON.parse(local);
+        } catch(e) {
             return defaultData;
         }
-        return JSON.parse(local);
     }
 
     function renderContent() {
         const data = getRoutes();
         const list = document.getElementById('routes-list');
+        if(!list) return;
         list.innerHTML = '';
 
         data.routes.forEach((route, rIdx) => {
@@ -373,6 +378,7 @@
 
     function changeSlide(routeIdx, direction) {
         const container = document.getElementById(`slider-${routeIdx}`);
+        if(!container) return;
         const slides = container.getElementsByClassName('slide');
         let activeIdx = 0;
         
@@ -390,17 +396,29 @@
         slides[newIdx].classList.add('active');
     }
     function initMap() {
-        myMap = new ymaps.Map("map", {
-            center: [58.615, 49.670],
-            zoom: 11,
-            controls: ['zoomControl']
-        });
-        myMap.behaviors.disable('scrollZoom');
-        renderContent();
+        const statusEl = document.getElementById('map-status');
+        if (typeof ymaps === 'undefined' || !ymaps.Map) {
+            if(statusEl) statusEl.innerText = "Для работы карты на Vercel требуется добавить API-ключ Яндекса.";
+            return;
+        }
+        
+        try {
+            myMap = new ymaps.Map("map", {
+                center: [58.615, 49.670],
+                zoom: 11,
+                controls: ['zoomControl']
+            });
+            myMap.behaviors.disable('scrollZoom');
+            if(statusEl) statusEl.style.display = 'none';
+            updateMapPoints();
+        } catch (e) {
+            if(statusEl) statusEl.innerText = "Ошибка инициализации Яндекс Карт.";
+            console.error(e);
+        }
     }
 
     function updateMapPoints() {
-        if (!myMap) return;
+        if (!myMap || typeof ymaps === 'undefined') return;
         myMap.geoObjects.removeAll();
         const data = getRoutes();
 
@@ -427,7 +445,16 @@
     }
 
     window.addEventListener('popstate', checkAdminRoute);
-    window.addEventListener('load', checkAdminRoute);
+    window.addEventListener('load', () => {
+        renderContent();
+        checkAdminRoute();
+        if (typeof ymaps !== 'undefined' && ymaps.ready) {
+            ymaps.ready(initMap);
+        } else {
+            const statusEl = document.getElementById('map-status');
+            if(statusEl) statusEl.innerText = "Яндекс Карты заблокировали запрос без API-ключа. Список статей доступен слева.";
+        }
+    });
 
     function login() {
         const u = document.getElementById('username').value;
@@ -464,7 +491,7 @@
         };
 
         currentData.routes.push(newRoute);
-        localStorage.setItem('kirov_routes_v2', JSON.stringify(currentData));
+        localStorage.setItem('kirov_routes_v3', JSON.stringify(currentData));
         
         renderContent();
         closeAdmin();
@@ -477,8 +504,6 @@
         document.getElementById('username').value = '';
         document.getElementById('password').value = '';
     }
-
-    ymaps.ready(initMap);
 </script>
 </body>
 </html>
