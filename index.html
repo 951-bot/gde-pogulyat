@@ -124,12 +124,13 @@
             font-size: 14px;
             line-height: 1.5;
             color: var(--text-muted);
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
 
         .location-name {
             color: var(--text-main);
             font-weight: 500;
+            margin-bottom: 4px;
         }
 
         .map-container {
@@ -302,7 +303,7 @@
 
     function getRoutes() {
         const local = localStorage.getItem('kirov_routes');
-        if (!local) {
+        if (!local || JSON.parse(local).routes.length < 3) {
             localStorage.setItem('kirov_routes', JSON.stringify(defaultData));
             return defaultData;
         }
