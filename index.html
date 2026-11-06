@@ -287,7 +287,7 @@
             {
                 "id": 3,
                 "name": "Экотропы в Порошино",
-                "description": "Обустроенные лесные просеки разной протяженности от 1 до 5 км. Отличное культовое место жителей города для бега, прогулок выходного дня и зимних лыж.",
+                "description": "Обустроенные лесные просеки разной протяженности от 1 до 5 км. Отличное место жителей города для бега, прогулок выходного дня и зимних лыж.",
                 "coords": [58.6358, 49.8037],
                 "photos": [
                     "https://unsplash.com",
@@ -308,9 +308,9 @@
     };
 
     function getRoutes() {
-        const local = localStorage.getItem('kirov_routes_google_v1');
+        const local = localStorage.getItem('kirov_routes_google_v2');
         if (!local || JSON.parse(local).routes.length < 4) {
-            localStorage.setItem('kirov_routes_google_v1', JSON.stringify(defaultData));
+            localStorage.setItem('kirov_routes_google_v2', JSON.stringify(defaultData));
             return defaultData;
         }
         return JSON.parse(local);
@@ -350,7 +350,6 @@
             `;
             list.appendChild(card);
             
-            // Активируем карту по умолчанию для первой статьи
             if (rIdx === 0) {
                 card.classList.add('active');
                 selectRoute(route.coords, card);
@@ -379,14 +378,12 @@
 </script>
 <script>
     function selectRoute(coords, cardElement) {
-        // Снимаем выделение со всех карточек и выделяем текущую
         const cards = document.getElementsByClassName('route-card');
         for(let i=0; i<cards.length; i++) {
             cards[i].classList.remove('active');
         }
         if (cardElement) cardElement.classList.add('active');
 
-        // Генерируем бесплатный темный эмбед Google Карты по координатам точки
         const mapContainer = document.getElementById('map-window');
         const lat = coords[0];
         const lng = coords[1];
@@ -448,7 +445,7 @@
         };
 
         currentData.routes.push(newRoute);
-        localStorage.setItem('kirov_routes_google_v1', JSON.stringify(currentData));
+        localStorage.setItem('kirov_routes_google_v2', JSON.stringify(currentData));
         
         renderContent();
         closeAdmin();
