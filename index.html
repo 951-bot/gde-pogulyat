@@ -3,198 +3,459 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Где погулять — Интерактивные тропы Кирова</title>
-    <!-- Подключаем Tailwind CSS для современного дизайна -->
-    <script src="https://tailwindcss.com"></script>
-    <!-- Подключаем шрифты -->
-    <link rel="preconnect" href="https://googleapis.com">
-    <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Подключаем Яндекс Карты -->
+    <title>Пешие маршруты Кирова</title>
+    <!-- Подключение API Яндекс Карт -->
     <script src="https://yandex.ru" type="text/javascript"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #F8F9FA; }
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+        :root {
+            --bg-color: #0b0b0c;
+            --card-bg: #161618;
+            --accent-color: #2f80ed;
+            --text-main: #f5f5f7;
+            --text-muted: #86868b;
+            --border-color: #2c2c2e;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            height: 100vh;
+        }
+
+        .sidebar {
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .header {
+            padding: 32px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .routes-list {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .route-card {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .route-card:hover {
+            border-color: var(--accent-color);
+        }
+
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: #111;
+        }
+
+        .slide {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .slider-btn:hover { background: rgba(0, 0, 0, 0.8); }
+        .slider-btn.prev { left: 10px; border-radius: 4px; }
+        .slider-btn.next { right: 10px; border-radius: 4px; }
+
+        .route-content {
+            padding: 20px;
+        }
+
+        .route-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 12px 0;
+        }
+
+        .location-item {
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .location-name {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .map-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .admin-panel {
+            display: none;
+            padding: 24px;
+            background: var(--card-bg);
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 9999;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        .admin-box {
+            max-width: 600px;
+            margin: 40px auto;
+            background: var(--bg-color);
+            padding: 32px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .btn-close {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            margin-left: 10px;
+        }
+
+        @media (max-width: 900px) {
+            .layout { grid-template-columns: 1fr; grid-template-rows: 50vh 50vh; }
+            .sidebar { order: 2; }
+            .map-container { order: 1; }
+        }
     </style>
 </head>
-<body class="h-screen overflow-hidden flex flex-col md:flex-row">
+<body>
 
-    <!-- Боковая панель -->
-    <aside class="w-full md:w-[380px] h-[40vh] md:h-full bg-white shadow-xl z-10 flex flex-col transition-all duration-300 relative">
-        
-        <!-- Шапка -->
-        <header class="p-5 border-b border-gray-100 flex items-center justify-between">
-            <h1 class="text-xl font-bold text-emerald-800 tracking-tight flex items-center gap-2">
-                🌲 Где погулять
-            </h1>
-            <span class="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full">г. Киров</span>
-        </header>
-
-        <!-- Основной контейнер для контента -->
-        <div class="flex-1 overflow-y-auto custom-scroll p-4 position-relative">
-            
-            <!-- ЭКРАН 1: Список мест -->
-            <div id="list-screen" class="space-y-3">
-                <p class="text-sm text-gray-500 mb-4 px-1">Выберите лесную тропу или маршрут для прогулки:</p>
-                <div id="places-container" class="space-y-3">
-                    <!-- Карточки загружаются из JSON -->
-                    <div class="text-center py-8 text-gray-400">Загрузка мест...</div>
-                </div>
-            </div>
-
-            <!-- ЭКРАН 2: Статья (изначально скрыта) -->
-            <div id="article-screen" class="hidden">
-                <button onclick="goBack()" class="mb-4 flex items-center gap-2 text-sm font-medium text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-3 py-2 rounded-lg transition-colors">
-                    ← Назад к списку
-                </button>
-                <div id="article-content">
-                    <!-- Контент статьи загружается динамически -->
-                </div>
-            </div>
-
+<div class="layout">
+    <div class="sidebar">
+        <div class="header">
+            <h1>Маршруты Кирова</h1>
+            <p>Выбранные пешие тропы и природные зоны</p>
         </div>
-    </aside>
+        <div class="routes-list" id="routes-list"></div>
+    </div>
+    <div class="map-container" id="map"></div>
+</div>
 
-    <!-- Карта -->
-    <main id="map" class="flex-1 h-[60vh] md:h-full bg-slate-100"></main>
+<!-- Панель админки -->
+<div class="admin-panel" id="admin-panel">
+    <div class="admin-box" id="auth-box">
+        <h2 style="margin-top:0;">Вход в управление</h2>
+        <div class="form-group">
+            <label>Логин</label>
+            <input type="text" id="username" class="form-control">
+        </div>
+        <div class="form-group">
+            <label>Пароль</label>
+            <input type="password" id="password" class="form-control">
+        </div>
+        <button class="btn" onclick="login()">Войти</button>
+        <button class="btn btn-close" onclick="closeAdmin()">Отмена</button>
+    </div>
 
-    <script>
-        let map;
-        let placesData = [];
-        let placemarks = {};
+    <div class="admin-box" id="form-box" style="display: none;">
+        <h2 style="margin-top:0;">Добавить новый маршрут</h2>
+        <div class="form-group">
+            <label>Название тропы</label>
+            <input type="text" id="route-name" class="form-control" placeholder="Например: Заречный парк">
+        </div>
+        <div class="form-group">
+            <label>Локация / Точка</label>
+            <input type="text" id="loc-name" class="form-control" placeholder="Памятник природы Заречный парк">
+        </div>
+        <div class="form-group">
+            <label>Описание</label>
+            <textarea id="loc-desc" class="form-control" rows="3" placeholder="Описание тропы..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Координаты на карте (Широта, Долгота)</label>
+            <input type="text" id="loc-coords" class="form-control" placeholder="58.6080, 49.7042">
+        </div>
+        <div class="form-group">
+            <label>Ссылки на фото (через запятую)</label>
+            <input type="text" id="route-photos" class="form-control" placeholder="https://unsplash.com, https://unsplash.com">
+        </div>
+        <button class="btn" onclick="saveRoute()">Сохранить маршрут</button>
+        <button class="btn btn-close" onclick="closeAdmin()">Выйти</button>
+    </div>
+</div>
+<script>
+    let myMap;
+    const defaultData = {
+        "routes": [
+            {
+                "id": 1,
+                "name": "Заречный парк и Северная набережная",
+                "photos": [
+                    "https://unsplash.com", 
+                    "https://unsplash.com"
+                ],
+                "locations": [{ "name": "Заречный парк", "description": "Сосновый бор, деревянные настилы, экологическая тропа длиной 3 км.", "coords": [58.6080, 49.7042] }]
+            },
+            {
+                "id": 2,
+                "name": "Экотропы в Порошино",
+                "photos": ["https://unsplash.com"],
+                "locations": [{ "name": "СТК Порошино", "description": "Обустроенные лесные тропы разной протяженности от 1 до 5 км.", "coords": [58.6358, 49.8037] }]
+            },
+            {
+                "id": 3,
+                "name": "Вятская большая тропа",
+                "photos": ["https://unsplash.com"],
+                "locations": [{ "name": "Старт маршрута (Дымково)", "description": "Начало пешего трека в районе старого моста.", "coords": [58.6044, 49.6953] }]
+            }
+        ]
+    };
 
-        // Инициализация карты Яндекс
-        ymaps.ready(initMap);
-
-        function initMap() {
-            map = new ymaps.Map("map", {
-                center: [58.6035, 49.6679], // Центр Кирова
-                zoom: 11,
-                controls: ['zoomControl', 'fullscreenControl']
-            });
-
-            // Загружаем данные из нашего JSON
-            fetch('data.json')
-                .then(response => response.json())
-                .then(data => {
-                    placesData = data;
-                    renderSidebarList(data);
-                    renderMapMarkers(data);
-                    
-                    // Обработка кнопки "Назад" в браузере
-                    window.onpopstate = function(event) {
-                        if (event.state && event.state.id) {
-                            showArticle(event.state.id, false);
-                        } else {
-                            showListScreen(false);
-                        }
-                    };
-                })
-                .catch(err => console.error('Ошибка загрузки данных:', err));
+    function getRoutes() {
+        const local = localStorage.getItem('kirov_routes');
+        if (!local) {
+            localStorage.setItem('kirov_routes', JSON.stringify(defaultData));
+            return defaultData;
         }
+        return JSON.parse(local);
+    }
 
-        // Вывод списка в боковую панель
-        function renderSidebarList(data) {
-            const container = document.getElementById('places-container');
-            container.innerHTML = '';
-            
-            data.forEach(place => {
-                const card = document.createElement('div');
-                card.className = "p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-emerald-300 hover:bg-emerald-50/30 cursor-pointer transition-all";
-                card.onclick = () => showArticle(place.id);
-                card.innerHTML = `
-                    <h3 class="font-semibold text-gray-800 mb-1">${place.title}</h3>
-                    <div class="flex flex-wrap gap-2 text-xs text-gray-500 mb-2">
-                        <span>📏 ${place.distance}</span>
-                        <span>⏱️ ${place.duration}</span>
+    function renderContent() {
+        const data = getRoutes();
+        const list = document.getElementById('routes-list');
+        list.innerHTML = '';
+
+        data.routes.forEach((route, rIdx) => {
+            const card = document.createElement('div');
+            card.className = 'route-card';
+
+            let sliderHTML = '';
+            if (route.photos && route.photos.length > 0) {
+                sliderHTML = `<div class="slider-container" id="slider-${rIdx}">`;
+                route.photos.forEach((p, pIdx) => {
+                    sliderHTML += `<img src="${p}" class="slide ${pIdx === 0 ? 'active' : ''}" alt="">`;
+                });
+                if (route.photos.length > 1) {
+                    sliderHTML += `
+                        <button class="slider-btn prev" onclick="changeSlide(${rIdx}, -1); event.stopPropagation();">←</button>
+                        <button class="slider-btn next" onclick="changeSlide(${rIdx}, 1); event.stopPropagation();">→</button>
+                    `;
+                }
+                sliderHTML += `</div>`;
+            }
+
+            let locsHTML = '';
+            route.locations.forEach(loc => {
+                locsHTML += `
+                    <div class="location-item">
+                        <div class="location-name">${loc.name}</div>
+                        <div>${loc.description}</div>
                     </div>
-                    <p class="text-xs text-gray-600 line-clamp-2">${place.description}</p>
                 `;
-                container.appendChild(card);
             });
-        }
 
-        // Расстановка меток на карте
-        function renderMapMarkers(data) {
-            data.forEach(place => {
-                const placemark = new ymaps.Placemark(place.coordinates, {
-                    hintContent: place.title,
-                    balloonContent: place.title
-                }, {
-                    preset: 'islands#emeraldDarkCircleIcon'
-                });
-
-                placemark.events.add('click', () => {
-                    showArticle(place.id);
-                });
-
-                map.geoObjects.add(placemark);
-                placemarks[place.id] = placemark;
-            });
-        }
-
-        // Показ экрана статьи
-        function showArticle(id, pushState = true) {
-            const place = placesData.find(p => p.id === id);
-            if (!place) return;
-
-            // Меняем экраны
-            document.getElementById('list-screen').classList.add('hidden');
-            document.getElementById('article-screen').classList.remove('hidden');
-
-            // Наполняем статью
-            document.getElementById('article-content').innerHTML = `
-                <h2 class="text-2xl font-bold text-gray-900 mb-3">${place.title}</h2>
-                
-                <div class="grid grid-cols-2 gap-2 mb-4">
-                    <div class="bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-                        <span class="block text-[10px] text-gray-400 uppercase font-bold tracking-wider">Дистанция</span>
-                        <span class="text-sm font-semibold text-gray-700">📏 ${place.distance}</span>
-                    </div>
-                    <div class="bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-                        <span class="block text-[10px] text-gray-400 uppercase font-bold tracking-wider">Время</span>
-                        <span class="text-sm font-semibold text-gray-700">⏱️ ${place.duration}</span>
-                    </div>
-                    <div class="bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-                        <span class="block text-[10px] text-gray-400 uppercase font-bold tracking-wider">Сложность</span>
-                        <span class="text-sm font-semibold text-emerald-700">🟢 ${place.difficulty}</span>
-                    </div>
+            card.innerHTML = `
+                ${sliderHTML}
+                <div class="route-content">
+                    <h2 class="route-title">${route.name}</h2>
+                    ${locsHTML}
                 </div>
-
-                <p class="text-sm text-gray-700 leading-relaxed mb-6">${place.description}</p>
-                
-                <a href="${place.geoLink}" target="_blank" class="block text-center w-full bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-3 px-4 rounded-xl text-sm transition-colors shadow-md">
-                    🗺️ Построить маршрут на картах
-                </a>
             `;
+            list.appendChild(card);
+        });
 
-            // Центрируем карту на выбранном месте
-            map.setCenter(place.coordinates, 14, { checkZoomRange: true, duration: 300 });
+        updateMapPoints();
+    }
 
-            // Добавляем запись в историю браузера, чтобы работала кнопка "Назад" смартфона
-            if (pushState) {
-                history.pushState({ id: id }, place.title, `?route=${id}`);
+    function changeSlide(routeIdx, direction) {
+        const container = document.getElementById(`slider-${routeIdx}`);
+        const slides = container.getElementsByClassName('slide');
+        let activeIdx = 0;
+        
+        for (let i = 0; i < slides.length; i++) {
+            if (slides[i].classList.contains('active')) {
+                activeIdx = i;
+                break;
             }
         }
 
-        // Возврат к списку
-        function goBack() {
-            showListScreen(true);
+        slides[activeIdx].classList.remove('active');
+        let newIdx = activeIdx + direction;
+        if (newIdx >= slides.length) newIdx = 0;
+        if (newIdx < 0) newIdx = slides.length - 1;
+        slides[newIdx].classList.add('active');
+    }
+    function initMap() {
+        myMap = new ymaps.Map("map", {
+            center: [58.615, 49.670],
+            zoom: 11,
+            controls: ['zoomControl']
+        });
+        myMap.behaviors.disable('scrollZoom');
+        renderContent();
+    }
+
+    function updateMapPoints() {
+        if (!myMap) return;
+        myMap.geoObjects.removeAll();
+        const data = getRoutes();
+
+        data.routes.forEach(route => {
+            route.locations.forEach(loc => {
+                if (loc.coords && loc.coords.length === 2) {
+                    const placemark = new ymaps.Placemark(loc.coords, {
+                        balloonContentHeader: loc.name,
+                        balloonContentBody: loc.description
+                    }, {
+                        preset: 'islands#blackDarkGlueIcon'
+                    });
+                    myMap.geoObjects.add(placemark);
+                }
+            });
+        });
+    }
+
+    function checkAdminRoute() {
+        if (window.location.hash === '#admin' || window.location.pathname.endsWith('/admin')) {
+            document.getElementById('admin-panel').style.display = 'block';
+        }
+    }
+
+    window.addEventListener('hashchange', checkAdminRoute);
+    window.addEventListener('load', checkAdminRoute);
+
+    function login() {
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        if (u === 'admin' && p === 'admin') {
+            document.getElementById('auth-box').style.display = 'none';
+            document.getElementById('form-box').style.display = 'block';
+        } else {
+            alert('Неверный логин или пароль');
+        }
+    }
+
+    function saveRoute() {
+        const name = document.getElementById('route-name').value;
+        const locName = document.getElementById('loc-name').value;
+        const desc = document.getElementById('loc-desc').value;
+        const coordsStr = document.getElementById('loc-coords').value;
+        const photosStr = document.getElementById('route-photos').value;
+
+        if (!name || !locName || !coordsStr) {
+            alert('Заполните обязательные поля');
+            return;
         }
 
-        function showListScreen(pushState = true) {
-            document.getElementById('list-screen').classList.remove('hidden');
-            document.getElementById('article-screen').classList.add('hidden');
-            
-            // Сбрасываем карту на общий вид Кирова
-            map.setCenter([58.6035, 49.6679], 11, { duration: 300 });
+        const coords = coordsStr.split(',').map(c => parseFloat(c.trim()));
+        const photos = photosStr ? photosStr.split(',').map(p => p.trim()) : [];
 
-            if (pushState) {
-                history.pushState(null, 'Где погулять', window.location.pathname);
-            }
-        }
-    </script>
+        const currentData = getRoutes();
+        const newRoute = {
+            id: Date.now(),
+            name: name,
+            photos: photos,
+            locations: [{ name: locName, description: desc, coords: coords }]
+        };
+
+        currentData.routes.push(newRoute);
+        localStorage.setItem('kirov_routes', JSON.stringify(currentData));
+        
+        renderContent();
+        closeAdmin();
+        alert('Маршрут успешно добавлен!');
+    }
+
+    function closeAdmin() {
+        document.getElementById('admin-panel').style.display = 'none';
+        window.location.hash = '';
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+    }
+
+    ymaps.ready(initMap);
+</script>
 </body>
 </html>
