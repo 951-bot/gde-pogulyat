@@ -308,9 +308,9 @@
     };
 
     function getRoutes() {
-        const local = localStorage.getItem('kirov_routes_google_v2');
+        const local = localStorage.getItem('kirov_routes_yandex_embed_v1');
         if (!local || JSON.parse(local).routes.length < 4) {
-            localStorage.setItem('kirov_routes_google_v2', JSON.stringify(defaultData));
+            localStorage.setItem('kirov_routes_yandex_embed_v1', JSON.stringify(defaultData));
             return defaultData;
         }
         return JSON.parse(local);
@@ -385,14 +385,15 @@
         if (cardElement) cardElement.classList.add('active');
 
         const mapContainer = document.getElementById('map-window');
+        // Извлекаем широту и долготу из массива
         const lat = coords[0];
         const lng = coords[1];
         
+        // Используем полностью стабильный бесплатный iframe Яндекс Карт
         mapContainer.innerHTML = `
             <iframe 
-                src="https://google.com{lat},${lng}&z=14&output=embed&t=k" 
-                allowfullscreen="" 
-                loading="lazy">
+                src="https://yandex.ru{lng},${lat}&z=14&pt=${lng},${lat},pm2blm" 
+                allowfullscreen="true">
             </iframe>
         `;
     }
@@ -445,7 +446,7 @@
         };
 
         currentData.routes.push(newRoute);
-        localStorage.setItem('kirov_routes_google_v2', JSON.stringify(currentData));
+        localStorage.setItem('kirov_routes_yandex_embed_v1', JSON.stringify(currentData));
         
         renderContent();
         closeAdmin();
