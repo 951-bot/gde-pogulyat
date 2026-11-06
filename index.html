@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Пешие маршруты Кирова</title>
-    <!-- Подключаем API Яндекс Карт (для работы на Vercel желательно вставить свой apikey в ссылку) -->
-    <script src="https://yandex.ru" type="text/javascript"></script>
     <style>
         :root {
             --bg-color: #0b0b0c;
@@ -68,17 +66,18 @@
             border: 1px solid var(--border-color);
             border-radius: 12px;
             overflow: hidden;
+            cursor: pointer;
             transition: transform 0.2s, border-color 0.2s;
         }
 
-        .route-card:hover {
+        .route-card:hover, .route-card.active {
             border-color: var(--accent-color);
         }
 
         .slider-container {
             position: relative;
             width: 100%;
-            height: 220px;
+            height: 200px;
             background: #111;
         }
 
@@ -118,36 +117,26 @@
         .route-title {
             font-size: 18px;
             font-weight: 600;
-            margin: 0 0 12px 0;
+            margin: 0 0 8px 0;
         }
 
-        .location-item {
+        .route-desc {
             font-size: 14px;
             line-height: 1.5;
             color: var(--text-muted);
-            margin-bottom: 12px;
-        }
-
-        .location-name {
-            color: var(--text-main);
-            font-weight: 500;
-            margin-bottom: 4px;
+            margin: 0;
         }
 
         .map-container {
             width: 100%;
             height: 100%;
-            position: relative;
+            background: #111;
         }
 
-        .map-error-msg {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            color: var(--text-muted);
-            font-size: 14px;
-            text-align: center;
-            padding: 20px;
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
 
         .admin-panel {
@@ -217,7 +206,7 @@
 
         @media (max-width: 900px) {
             .layout { display: flex; flex-direction: column; height: auto; }
-            .map-container { width: 100%; height: 350px; position: sticky; top: 0; z-index: 100; background: #000; }
+            .map-container { width: 100%; height: 350px; position: sticky; top: 0; z-index: 100; }
             .sidebar { width: 100%; height: auto; border-right: none; }
         }
     </style>
@@ -232,9 +221,7 @@
         </div>
         <div class="routes-list" id="routes-list"></div>
     </div>
-    <div class="map-container" id="map">
-        <div class="map-error-msg" id="map-status">Загрузка карты Яндекс...</div>
-    </div>
+    <div class="map-container" id="map-window"></div>
 </div>
 
 <div class="admin-panel" id="admin-panel">
@@ -259,16 +246,12 @@
             <input type="text" id="route-name" class="form-control" placeholder="Заречный парк">
         </div>
         <div class="form-group">
-            <label>Локация / Точка</label>
-            <input type="text" id="loc-name" class="form-control" placeholder="Памятник природы Заречный парк">
-        </div>
-        <div class="form-group">
             <label>Описание</label>
-            <textarea id="loc-desc" class="form-control" rows="3" placeholder="Описание тропы..."></textarea>
+            <textarea id="route-desc-input" class="form-control" rows="3" placeholder="Описание тропы..."></textarea>
         </div>
         <div class="form-group">
             <label>Координаты на карте (Широта, Долгота)</label>
-            <input type="text" id="loc-coords" class="form-control" placeholder="58.6080, 49.7042">
+            <input type="text" id="route-coords" class="form-control" placeholder="58.6080, 49.7042">
         </div>
         <div class="form-group">
             <label>Ссылки на фото (через запятую)</label>
@@ -279,64 +262,69 @@
     </div>
 </div>
 <script>
-    let myMap = null;
     const defaultData = {
         "routes": [
             {
                 "id": 1,
-                "name": "Заречный парк и Северная набережная",
+                "name": "Заречный парк",
+                "description": "Памятник природы на левом берегу Вятки. Живописный сосновый бор, чистый воздух и деревянные пешеходные настилы для комфортных прогулок на 3 км.",
+                "coords": [58.6080, 49.7042],
                 "photos": [
                     "https://unsplash.com", 
                     "https://unsplash.com"
-                ],
-                "locations": [
-                    { "name": "Заречный парк", "description": "Сосновый бор, деревянные настилы, экологическая тропа длиной 3 км.", "coords": [58.6080, 49.7042] },
-                    { "name": "Северная набережная", "description": "Панорамный вид на город и реку Вятку с противоположного берега.", "coords": [58.6346, 49.6384] }
                 ]
             },
             {
                 "id": 2,
-                "name": "Экотропы в Порошино",
+                "name": "Северная набережная",
                 "photos": [
                     "https://unsplash.com",
                     "https://unsplash.com"
                 ],
-                "locations": [{ "name": "СТК Порошино", "description": "Обустроенные лесные тропы разной протяженности от 1 до 5 км.", "coords": [58.6358, 49.8037] }]
+                "description": "Район Филейки, Северной больницы и спортивного Трамплина. Высокий берег реки Вятки, открывающий красивый панорамный вид на заречные дали.",
+                "coords": [58.6346, 49.6384]
             },
             {
                 "id": 3,
-                "name": "Вятская большая тропа",
+                "name": "Экотропы в Порошино",
+                "description": "Обустроенные лесные просеки разной протяженности от 1 до 5 км. Отличное культовое место жителей города для бега, прогулок выходного дня и зимних лыж.",
+                "coords": [58.6358, 49.8037],
                 "photos": [
                     "https://unsplash.com",
                     "https://unsplash.com"
-                ],
-                "locations": [{ "name": "Старт маршрута (Дымково)", "description": "Начало пешего трека в районе старого моста.", "coords": [58.6044, 49.6953] }]
+                ]
+            },
+            {
+                "id": 4,
+                "name": "Вятская большая тропа",
+                "description": "Протяженный природный трек. Старт в черте города начинается от слободы Дымково у старого моста и идет вдоль русла реки в сторону Малой Субботихи.",
+                "coords": [58.6044, 49.6953],
+                "photos": [
+                    "https://unsplash.com",
+                    "https://unsplash.com"
+                ]
             }
         ]
     };
 
     function getRoutes() {
-        try {
-            const local = localStorage.getItem('kirov_routes_v3');
-            if (!local) {
-                localStorage.setItem('kirov_routes_v3', JSON.stringify(defaultData));
-                return defaultData;
-            }
-            return JSON.parse(local);
-        } catch(e) {
+        const local = localStorage.getItem('kirov_routes_google_v1');
+        if (!local || JSON.parse(local).routes.length < 4) {
+            localStorage.setItem('kirov_routes_google_v1', JSON.stringify(defaultData));
             return defaultData;
         }
+        return JSON.parse(local);
     }
 
     function renderContent() {
         const data = getRoutes();
         const list = document.getElementById('routes-list');
-        if(!list) return;
         list.innerHTML = '';
 
         data.routes.forEach((route, rIdx) => {
             const card = document.createElement('div');
             card.className = 'route-card';
+            card.onclick = () => selectRoute(route.coords, card);
 
             let sliderHTML = '';
             if (route.photos && route.photos.length > 0) {
@@ -353,32 +341,25 @@
                 sliderHTML += `</div>`;
             }
 
-            let locsHTML = '';
-            route.locations.forEach(loc => {
-                locsHTML += `
-                    <div class="location-item">
-                        <div class="location-name">${loc.name}</div>
-                        <div>${loc.description}</div>
-                    </div>
-                `;
-            });
-
             card.innerHTML = `
                 ${sliderHTML}
                 <div class="route-content">
                     <h2 class="route-title">${route.name}</h2>
-                    ${locsHTML}
+                    <p class="route-desc">${route.description}</p>
                 </div>
             `;
             list.appendChild(card);
+            
+            // Активируем карту по умолчанию для первой статьи
+            if (rIdx === 0) {
+                card.classList.add('active');
+                selectRoute(route.coords, card);
+            }
         });
-
-        updateMapPoints();
     }
 
     function changeSlide(routeIdx, direction) {
         const container = document.getElementById(`slider-${routeIdx}`);
-        if(!container) return;
         const slides = container.getElementsByClassName('slide');
         let activeIdx = 0;
         
@@ -395,46 +376,28 @@
         if (newIdx < 0) newIdx = slides.length - 1;
         slides[newIdx].classList.add('active');
     }
-    function initMap() {
-        const statusEl = document.getElementById('map-status');
-        if (typeof ymaps === 'undefined' || !ymaps.Map) {
-            if(statusEl) statusEl.innerText = "Для работы карты на Vercel требуется добавить API-ключ Яндекса.";
-            return;
+</script>
+<script>
+    function selectRoute(coords, cardElement) {
+        // Снимаем выделение со всех карточек и выделяем текущую
+        const cards = document.getElementsByClassName('route-card');
+        for(let i=0; i<cards.length; i++) {
+            cards[i].classList.remove('active');
         }
+        if (cardElement) cardElement.classList.add('active');
+
+        // Генерируем бесплатный темный эмбед Google Карты по координатам точки
+        const mapContainer = document.getElementById('map-window');
+        const lat = coords[0];
+        const lng = coords[1];
         
-        try {
-            myMap = new ymaps.Map("map", {
-                center: [58.615, 49.670],
-                zoom: 11,
-                controls: ['zoomControl']
-            });
-            myMap.behaviors.disable('scrollZoom');
-            if(statusEl) statusEl.style.display = 'none';
-            updateMapPoints();
-        } catch (e) {
-            if(statusEl) statusEl.innerText = "Ошибка инициализации Яндекс Карт.";
-            console.error(e);
-        }
-    }
-
-    function updateMapPoints() {
-        if (!myMap || typeof ymaps === 'undefined') return;
-        myMap.geoObjects.removeAll();
-        const data = getRoutes();
-
-        data.routes.forEach(route => {
-            route.locations.forEach(loc => {
-                if (loc.coords && loc.coords.length === 2) {
-                    const placemark = new ymaps.Placemark(loc.coords, {
-                        balloonContentHeader: loc.name,
-                        balloonContentBody: loc.description
-                    }, {
-                        preset: 'islands#blackDarkGlueIcon'
-                    });
-                    myMap.geoObjects.add(placemark);
-                }
-            });
-        });
+        mapContainer.innerHTML = `
+            <iframe 
+                src="https://google.com{lat},${lng}&z=14&output=embed&t=k" 
+                allowfullscreen="" 
+                loading="lazy">
+            </iframe>
+        `;
     }
 
     function checkAdminRoute() {
@@ -448,12 +411,6 @@
     window.addEventListener('load', () => {
         renderContent();
         checkAdminRoute();
-        if (typeof ymaps !== 'undefined' && ymaps.ready) {
-            ymaps.ready(initMap);
-        } else {
-            const statusEl = document.getElementById('map-status');
-            if(statusEl) statusEl.innerText = "Яндекс Карты заблокировали запрос без API-ключа. Список статей доступен слева.";
-        }
     });
 
     function login() {
@@ -469,12 +426,11 @@
 
     function saveRoute() {
         const name = document.getElementById('route-name').value;
-        const locName = document.getElementById('loc-name').value;
-        const desc = document.getElementById('loc-desc').value;
-        const coordsStr = document.getElementById('loc-coords').value;
+        const desc = document.getElementById('route-desc-input').value;
+        const coordsStr = document.getElementById('route-coords').value;
         const photosStr = document.getElementById('route-photos').value;
 
-        if (!name || !locName || !coordsStr) {
+        if (!name || !desc || !coordsStr) {
             alert('Заполните обязательные поля');
             return;
         }
@@ -486,12 +442,13 @@
         const newRoute = {
             id: Date.now(),
             name: name,
-            photos: photos,
-            locations: [{ name: locName, description: desc, coords: coords }]
+            description: desc,
+            coords: coords,
+            photos: photos
         };
 
         currentData.routes.push(newRoute);
-        localStorage.setItem('kirov_routes_v3', JSON.stringify(currentData));
+        localStorage.setItem('kirov_routes_google_v1', JSON.stringify(currentData));
         
         renderContent();
         closeAdmin();
