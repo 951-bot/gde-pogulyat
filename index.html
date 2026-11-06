@@ -203,17 +203,15 @@
             margin-left: 10px;
         }
 
-        /* Полностью переработанные стили под мобильные экраны */
         @media (max-width: 900px) {
             .layout {
                 display: flex;
                 flex-direction: column;
                 height: auto;
-                overflow: initial;
             }
             .map-container {
                 width: 100%;
-                height: 350px; /* Фиксированная высота карты на смартфонах */
+                height: 350px;
                 position: sticky;
                 top: 0;
                 z-index: 100;
@@ -222,7 +220,6 @@
                 width: 100%;
                 height: auto;
                 border-right: none;
-                overflow: initial;
             }
         }
     </style>
@@ -319,10 +316,9 @@
     };
 
     function getRoutes() {
-        const local = localStorage.getItem('kirov_routes');
-        // Жесткая проверка: если в кэше пусто или меньше 3 троп, принудительно затираем дефолтными данными
-        if (!local || JSON.parse(local).routes.length < 3) {
-            localStorage.setItem('kirov_routes', JSON.stringify(defaultData));
+        const local = localStorage.getItem('kirov_routes_v2');
+        if (!local) {
+            localStorage.setItem('kirov_routes_v2', JSON.stringify(defaultData));
             return defaultData;
         }
         return JSON.parse(local);
@@ -393,8 +389,6 @@
         if (newIdx < 0) newIdx = slides.length - 1;
         slides[newIdx].classList.add('active');
     }
-</script>
-<script>
     function initMap() {
         myMap = new ymaps.Map("map", {
             center: [58.615, 49.670],
@@ -470,7 +464,7 @@
         };
 
         currentData.routes.push(newRoute);
-        localStorage.setItem('kirov_routes', JSON.stringify(currentData));
+        localStorage.setItem('kirov_routes_v2', JSON.stringify(currentData));
         
         renderContent();
         closeAdmin();
