@@ -68,7 +68,7 @@
             position: absolute; top: 50%; transform: translateY(-50%);
             background: rgba(0,0,0,0.6); border: none; color: #fff;
             padding: 8px 12px; cursor: pointer; font-size: 14px; user-select: none;
-            border-radius: 4px; transition: background 0.2s;
+            border-radius: 4px; transition: background 0.2s; z-index: 10;
         }
         .slider-btn:hover { background: rgba(0,0,0,0.8); }
         .slider-btn.prev { left: 10px; }
@@ -92,7 +92,7 @@
         .article-desc { font-size: 16px; line-height: 1.7; color: var(--text-muted); margin-bottom: 32px; white-space: pre-wrap; }
         .article-map { width: 100%; height: 500px; border-radius: 16px; overflow: hidden; background: #111; border: 1px solid var(--border-color); }
 
-        /* ===== Lightbox (Полноэкранный просмотр) ===== */
+        /* ===== Lightbox ===== */
         .lightbox {
             display: none; position: fixed; inset: 0; z-index: 10000;
             background: rgba(0, 0, 0, 0.95); align-items: center; justify-content: center;
@@ -101,13 +101,14 @@
         .lightbox-img { max-width: 90vw; max-height: 90vh; object-fit: contain; }
         .lightbox-close {
             position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px;
-            cursor: pointer; user-select: none; line-height: 1;
+            cursor: pointer; user-select: none; line-height: 1; z-index: 10001;
         }
+        .lightbox-close:hover { color: var(--danger-color); }
         .lightbox-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
             background: rgba(255,255,255,0.1); border: none; color: #fff;
             padding: 16px 24px; cursor: pointer; font-size: 24px; border-radius: 8px;
-            transition: background 0.2s;
+            transition: background 0.2s; z-index: 10001;
         }
         .lightbox-btn:hover { background: rgba(255,255,255,0.2); }
         .lightbox-prev { left: 20px; }
@@ -280,9 +281,9 @@ const defaultData = {
 };
 
 function getRoutes() {
-    const raw = localStorage.getItem('kirov_routes_v8');
+    const raw = localStorage.getItem('kirov_routes_v9');
     if (!raw) {
-        localStorage.setItem('kirov_routes_v8', JSON.stringify(defaultData));
+        localStorage.setItem('kirov_routes_v9', JSON.stringify(defaultData));
         return defaultData;
     }
     try {
@@ -293,7 +294,7 @@ function getRoutes() {
 }
 
 function persistRoutes(data) {
-    localStorage.setItem('kirov_routes_v8', JSON.stringify(data));
+    localStorage.setItem('kirov_routes_v9', JSON.stringify(data));
 }
 
 /* ============================================================
@@ -396,7 +397,7 @@ function renderHome() {
         if (route.photos && route.photos.length > 0) {
             sliderHTML = `<div class="slider-container" id="home-slider-${idx}">`;
             route.photos.forEach((p, pi) => {
-                // Добавил loading="lazy" для оптимизации загрузки
+                // Используем обычные картинки, браузер сам их подгрузит при появлении
                 sliderHTML += `<img src="${p}" class="slide ${pi === 0 ? 'active' : ''}" alt="" loading="lazy">`;
             });
             if (route.photos.length > 1) {
@@ -498,7 +499,6 @@ function updateLightbox() {
     const img = document.getElementById('lightbox-img');
     img.src = currentLightboxImages[currentLightboxIndex];
     
-    // Скрываем кнопки навигации, если фото всего одно
     const btns = document.querySelectorAll('.lightbox-btn');
     btns.forEach(btn => {
         btn.style.display = currentLightboxImages.length > 1 ? 'block' : 'none';
@@ -531,7 +531,7 @@ async function openArticle(routeId) {
             img.className = 'slide' + (pi === 0 ? ' active' : '');
             img.onerror = () => { img.style.display = 'none'; };
             
-            // Добавляем событие клика для открытия лайтбокса
+            // Клик для полноэкранного просмотра
             img.onclick = () => openLightbox(route.photos, pi);
             
             slider.appendChild(img);
@@ -711,4 +711,7 @@ function addPhotoField(value = '') {
     container.appendChild(group);
 }
 
-function save
+function saveRoute() {
+    const id = document.getElementById('edit-id').value;
+    const name = document.getElementById('edit-name').value.trim();
+    const
