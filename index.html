@@ -15,6 +15,7 @@
             --text-main: #f5f5f7;
             --text-muted: #86868b;
             --border-color: #2c2c2e;
+            --danger-color: #eb5757;
         }
         * { box-sizing: border-box; }
         body {
@@ -39,11 +40,14 @@
             display: flex;
             flex-direction: column;
             overflow-y: auto;
-            scroll-behavior: smooth; /* Плавная прокрутка списка */
+            scroll-behavior: smooth;
         }
-        .header { padding: 32px 24px; border-bottom: 1px solid var(--border-color); }
+        .header { padding: 32px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start; }
         .header h1 { font-size: 24px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.5px; }
         .header p { color: var(--text-muted); margin: 0; font-size: 14px; }
+        .admin-link { color: var(--text-muted); text-decoration: none; font-size: 13px; padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 6px; transition: 0.2s; }
+        .admin-link:hover { color: var(--text-main); border-color: var(--accent-color); }
+        
         .routes-list { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
         
         .route-card {
@@ -58,12 +62,9 @@
             border-color: var(--accent-color); 
             box-shadow: 0 4px 12px rgba(47, 128, 237, 0.15);
         }
-        .route-card.active { 
-            transform: scale(0.99); 
-            border-color: var(--accent-color);
-        }
+        .route-card.active { transform: scale(0.99); }
         
-        .slider-container { position: relative; width: 100%; height: 180px; background: #111; }
+        .slider-container { position: relative; width: 100%; height: 200px; background: #111; }
         .slide { width: 100%; height: 100%; object-fit: cover; display: none; }
         .slide.active { display: block; }
         .slider-btn {
@@ -85,34 +86,58 @@
         .back-btn {
             display: inline-block; margin-bottom: 20px; padding: 10px 20px;
             background: var(--card-bg); border: 1px solid var(--border-color);
-            border-radius: 8px; color: var(--text-main); cursor: pointer; font-size: 14px;
+            border-radius: 8px; color: var(--text-main); cursor: pointer; font-size: 14px; text-decoration: none;
         }
         .back-btn:hover { border-color: var(--accent-color); }
         .article-title { font-size: 32px; font-weight: 700; margin: 0 0 20px; letter-spacing: -0.5px; }
-        .article-slider { position: relative; width: 100%; height: 360px; background: #111; border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
+        .article-slider { position: relative; width: 100%; height: 400px; background: #111; border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
         .article-slider .slide { height: 100%; }
-        .article-desc { font-size: 16px; line-height: 1.7; color: var(--text-muted); margin-bottom: 32px; }
+        .article-desc { font-size: 16px; line-height: 1.7; color: var(--text-muted); margin-bottom: 32px; white-space: pre-wrap; }
         .article-map { width: 100%; height: 500px; border-radius: 16px; overflow: hidden; background: #111; border: 1px solid var(--border-color); }
 
         /* ===== Admin ===== */
         .admin-panel {
-            display: none; padding: 24px; background: var(--card-bg);
+            display: none; background: var(--bg-color);
             position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 9999;
             overflow-y: auto;
         }
-        .admin-box { max-width: 600px; margin: 40px auto; background: var(--bg-color); padding: 32px; border-radius: 16px; border: 1px solid var(--border-color); }
+        .admin-header { background: var(--card-bg); padding: 16px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .admin-header h2 { margin: 0; font-size: 20px; }
+        .admin-container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        
+        /* Список статей в админке */
+        .admin-list-item { background: var(--card-bg); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .admin-list-item:hover { border-color: var(--accent-color); }
+        .admin-actions button { background: transparent; border: 1px solid var(--border-color); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-left: 8px; }
+        .admin-actions button:hover { border-color: var(--accent-color); }
+        .admin-actions .btn-danger:hover { border-color: var(--danger-color); color: var(--danger-color); }
+
+        /* Форма редактирования */
+        .edit-form { background: var(--card-bg); padding: 32px; border-radius: 12px; border: 1px solid var(--border-color); display: none; }
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
-        .form-control { width: 100%; padding: 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; color: white; font-size: 14px; }
+        .form-control { width: 100%; padding: 12px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; color: white; font-size: 14px; font-family: inherit; }
         .form-control:focus { outline: none; border-color: var(--accent-color); }
-        .btn { background: var(--accent-color); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 14px; }
-        .btn-close { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); margin-left: 10px; }
+        
+        /* Поля для фотографий */
+        .photo-input-group { display: flex; gap: 8px; margin-bottom: 8px; }
+        .photo-input-group input { flex: 1; }
+        .btn-remove-photo { background: transparent; border: 1px solid var(--border-color); color: var(--danger-color); padding: 0 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-remove-photo:hover { border-color: var(--danger-color); }
+        
+        .btn { background: var(--accent-color); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .btn:hover { background: #1a6ed8; }
+        .btn-secondary { background: transparent; border: 1px solid var(--border-color); color: white; }
+        .btn-secondary:hover { background: var(--border-color); }
+        .btn-sm { padding: 8px 16px; font-size: 13px; }
+        .btn-add-photo { background: transparent; border: 1px dashed var(--border-color); color: var(--text-muted); width: 100%; padding: 10px; border-radius: 8px; cursor: pointer; margin-top: 4px; }
+        .btn-add-photo:hover { border-color: var(--accent-color); color: var(--text-main); }
 
         @media (max-width: 900px) {
             .home-layout { display: flex; flex-direction: column; height: auto; }
-            .map-container { width: 100%; height: 350px; order: -1; position: sticky; top: 0; z-index: 100; }
+            .map-container { width: 100%; height: 400px; order: -1; position: sticky; top: 0; z-index: 100; }
             .sidebar { width: 100%; height: auto; border-right: none; }
-            .article-slider { height: 240px; }
+            .article-slider { height: 250px; }
             .article-map { height: 350px; }
         }
     </style>
@@ -124,8 +149,12 @@
     <div class="home-layout">
         <div class="sidebar">
             <div class="header">
-                <h1>Маршруты Кирова</h1>
-                <p>Пешие тропы и природные зоны</p>
+                <div>
+                    <h1>Маршруты Кирова</h1>
+                    <p>Пешие тропы и природные зоны</p>
+                </div>
+                <!-- Скрытая ссылка на админку -->
+                <a href="/admin" class="admin-link">Вход</a>
             </div>
             <div class="routes-list" id="routes-list"></div>
         </div>
@@ -136,7 +165,7 @@
 <!-- ==================== ARTICLE ==================== -->
 <div id="page-article" class="page">
     <div class="article-view">
-        <button class="back-btn" onclick="goHome()">← На главную</button>
+        <a href="#" class="back-btn" onclick="goHome(event)">← На главную</a>
         <h1 class="article-title" id="article-title"></h1>
         <div class="article-slider" id="article-slider"></div>
         <p class="article-desc" id="article-desc"></p>
@@ -146,40 +175,71 @@
 
 <!-- ==================== ADMIN ==================== -->
 <div class="admin-panel" id="admin-panel">
-    <div class="admin-box" id="auth-box">
-        <h2 style="margin-top:0;">Вход в управление</h2>
-        <div class="form-group">
-            <label>Логин</label>
-            <input type="text" id="username" class="form-control">
-        </div>
-        <div class="form-group">
-            <label>Пароль</label>
-            <input type="password" id="password" class="form-control">
-        </div>
-        <button class="btn" onclick="login()">Войти</button>
-        <button class="btn btn-close" onclick="closeAdmin()">Отмена</button>
+    <!-- Шапка админки -->
+    <div class="admin-header">
+        <h2>Управление маршрутами</h2>
+        <button class="btn btn-secondary btn-sm" onclick="closeAdmin()">Выйти на сайт</button>
     </div>
 
-    <div class="admin-box" id="form-box" style="display: none;">
-        <h2 style="margin-top:0;">Добавить новый маршрут</h2>
-        <div class="form-group">
-            <label>Название тропы</label>
-            <input type="text" id="route-name" class="form-control" placeholder="Заречный парк">
+    <div class="admin-container">
+        <!-- Форма входа -->
+        <div id="auth-box" style="max-width: 400px; margin: 100px auto; background: var(--card-bg); padding: 32px; border-radius: 12px; border: 1px solid var(--border-color);">
+            <h3 style="margin-top:0;">Вход в систему</h3>
+            <div class="form-group">
+                <label>Логин</label>
+                <input type="text" id="username" class="form-control" value="admin">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="password" class="form-control" value="admin">
+            </div>
+            <button class="btn" style="width: 100%;" onclick="login()">Войти</button>
         </div>
-        <div class="form-group">
-            <label>Описание</label>
-            <textarea id="route-desc-input" class="form-control" rows="3" placeholder="Описание тропы..."></textarea>
+
+        <!-- Список статей (скрыт до входа) -->
+        <div id="admin-list-view" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">Ваши статьи</h3>
+                <button class="btn btn-sm" onclick="openEditForm(null)">+ Добавить статью</button>
+            </div>
+            <div id="admin-routes-container"></div>
         </div>
-        <div class="form-group">
-            <label>Координаты (Широта, Долгота)</label>
-            <input type="text" id="route-coords" class="form-control" placeholder="58.6080, 49.7042">
+
+        <!-- Форма редактирования (скрыта до входа/нажатия) -->
+        <div id="admin-edit-view" class="edit-form">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3 style="margin: 0;" id="edit-form-title">Редактирование</h3>
+                <button class="btn btn-secondary btn-sm" onclick="backToList()">← Назад к списку</button>
+            </div>
+            
+            <input type="hidden" id="edit-id">
+            
+            <div class="form-group">
+                <label>Название тропы</label>
+                <input type="text" id="edit-name" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea id="edit-desc" class="form-control" rows="5"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Координаты (Широта, Долгота)</label>
+                <input type="text" id="edit-coords" class="form-control" placeholder="58.6464, 49.5383">
+            </div>
+            
+            <div class="form-group">
+                <label>Фотографии (ссылки)</label>
+                <div id="edit-photos-container"></div>
+                <button class="btn-add-photo" onclick="addPhotoField()">+ Добавить еще одну фотографию</button>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 32px;">
+                <button class="btn" onclick="saveRoute()">Сохранить изменения</button>
+                <button class="btn btn-secondary" onclick="backToList()">Отмена</button>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Ссылки на фото (через запятую)</label>
-            <input type="text" id="route-photos" class="form-control" placeholder="ссылка1, ссылка2">
-        </div>
-        <button class="btn" onclick="saveRoute()">Сохранить маршрут</button>
-        <button class="btn btn-close" onclick="closeAdmin()">Выйти</button>
     </div>
 </div>
 
@@ -191,64 +251,34 @@ const defaultData = {
     routes: [
         {
             id: 1,
-            name: "Заречный парк",
-            description: "Памятник природы на левом берегу Вятки. Живописный сосновый бор, чистый воздух и деревянные пешеходные настилы для комфортных прогулок на 3 км.",
-            coords: [58.6080, 49.7042],
+            name: "Боровые (жд станция Матанцы)",
+            description: "Лесной маршрут в окрестностях деревни Боровые и железнодорожной станции Матанцы. Это тихий уголок природы в нескольких километрах от городской суеты, где преобладают сосновые боры и смешанные леса. Тропа отлично подходит для спокойных прогулок, сбора грибов и ягод, а также для того, чтобы сменить городской пейзаж на тишину леса.\n\nНачало пути у лагеря «Юность» задаёт удобную точку старта — сюда легко добраться на пригородном транспорте или на машине. Маршрут не требует специальной подготовки и будет интересен как семьям с детьми, так и любителям уединённых лесных прогулок.",
+            coords: [58.6464, 49.5383],
             photos: [
-                "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
-                "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800"
-            ]
-        },
-        {
-            id: 2,
-            name: "Северная набережная",
-            description: "Район Филейки, Северной больницы и спортивного Трамплина. Высокий берег реки Вятки, открывающий красивый панорамный вид на заречные дали.",
-            coords: [58.6346, 49.6384],
-            photos: [
-                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
-                "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800"
-            ]
-        },
-        {
-            id: 3,
-            name: "Экотропы в Порошино",
-            description: "Обустроенные лесные просеки разной протяженности от 1 до 5 км. Отличное место для бега, прогулок выходного дня и зимних лыж.",
-            coords: [58.6358, 49.8037],
-            photos: [
-                "https://images.unsplash.com/photo-1448375240586-882707db888b?w=800",
-                "https://images.unsplash.com/photo-1511497584788-876760111969?w=800"
-            ]
-        },
-        {
-            id: 4,
-            name: "Вятская большая тропа",
-            description: "Протяженный природный трек. Старт в черте города начинается от слободы Дымково у старого моста и идет вдоль русла реки в сторону Малой Субботихи.",
-            coords: [58.6044, 49.6953],
-            photos: [
-                "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800",
-                "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800"
+                "https://disk.yandex.ru/i/BeZGzAj24cVQKg?format=webp",
+                "https://disk.yandex.ru/i/sQ6yQVhz5csY_w?format=webp",
+                "https://disk.yandex.ru/i/ApyyFS4AyK2ULg?format=webp",
+                "https://disk.yandex.ru/i/khLuDvOKxhPUgA?format=webp"
             ]
         }
     ]
 };
 
 function getRoutes() {
-    const raw = localStorage.getItem('kirov_routes_v2');
+    const raw = localStorage.getItem('kirov_routes_v3');
     if (!raw) {
-        localStorage.setItem('kirov_routes_v2', JSON.stringify(defaultData));
+        localStorage.setItem('kirov_routes_v3', JSON.stringify(defaultData));
         return defaultData;
     }
     try {
-        const parsed = JSON.parse(raw);
-        if (!parsed.routes || parsed.routes.length === 0) return defaultData;
-        return parsed;
+        return JSON.parse(raw);
     } catch (e) {
         return defaultData;
     }
 }
 
 function persistRoutes(data) {
-    localStorage.setItem('kirov_routes_v2', JSON.stringify(data));
+    localStorage.setItem('kirov_routes_v3', JSON.stringify(data));
 }
 
 /* ============================================================
@@ -265,14 +295,11 @@ async function initHomeMap() {
 
     const data = getRoutes();
     const first = data.routes[0];
-    const center = first ? [first.coords[1], first.coords[0]] : [49.7042, 58.6080];
+    const center = first ? [first.coords[1], first.coords[0]] : [49.5383, 58.6464];
 
     homeMap = new YMap(
         document.getElementById('home-map'),
-        {
-            location: { center, zoom: 12 },
-            showScaleInCopyrights: true
-        }
+        { location: { center, zoom: 12 }, showScaleInCopyrights: true }
     );
     homeMap.addChild(new YMapDefaultSchemeLayer({ theme: 'dark' }));
     homeMap.addChild(new YMapDefaultFeaturesLayer());
@@ -286,17 +313,12 @@ async function initHomeMap() {
             transition: transform 0.2s, background-color 0.2s;
         `;
         
-        markerEl.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openArticle(route.id);
-        });
-
+        markerEl.addEventListener('click', (e) => { e.stopPropagation(); openArticle(route.id); });
         markerEl.addEventListener('mouseenter', () => {
             highlightCardOnHover(route.id);
             markerEl.style.transform = 'scale(1.3)';
             markerEl.style.backgroundColor = '#f5a623';
         });
-        
         markerEl.addEventListener('mouseleave', () => {
             resetHoverHighlights();
             if (activeRouteId !== route.id) {
@@ -305,25 +327,17 @@ async function initHomeMap() {
             }
         });
 
-        const marker = new YMapMarker(
-            { coordinates: [route.coords[1], route.coords[0]] },
-            markerEl
-        );
+        const marker = new YMapMarker({ coordinates: [route.coords[1], route.coords[0]] }, markerEl);
         homeMap.addChild(marker);
         homePlacemarks.push({ id: route.id, marker, el: markerEl });
     });
 }
 
-/* ============================================================
-   HOVER LOGIC
-   ============================================================ */
 function highlightCardOnHover(routeId) {
     const card = document.querySelector(`.route-card[data-id="${routeId}"]`);
     if (card) {
         card.style.borderColor = '#f5a623';
         card.style.boxShadow = '0 4px 12px rgba(245, 166, 35, 0.2)';
-        
-        // НОВОЕ: Автоматическая прокрутка к карточке, если она за пределами экрана
         card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
@@ -335,7 +349,6 @@ function resetHoverHighlights() {
             c.style.boxShadow = '';
         }
     });
-    
     homePlacemarks.forEach(p => {
         if (p.id !== activeRouteId) {
             p.el.style.transform = 'scale(1)';
@@ -352,6 +365,13 @@ function renderHome() {
     const data = getRoutes();
     const list = document.getElementById('routes-list');
     list.innerHTML = '';
+
+    // Если статей нет
+    if (data.routes.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted); text-align:center; margin-top:40px;">Пока нет добавленных маршрутов.</p>';
+        initHomeMap();
+        return;
+    }
 
     data.routes.forEach((route, idx) => {
         const card = document.createElement('div');
@@ -371,13 +391,15 @@ function renderHome() {
                 `;
             }
             sliderHTML += `</div>`;
+        } else {
+            sliderHTML = `<div class="slider-container" style="display:flex;align-items:center;justify-content:center;color:#555;">Нет фото</div>`;
         }
 
         card.innerHTML = `
             ${sliderHTML}
             <div class="route-content">
                 <h2 class="route-title">${route.name}</h2>
-                <p class="route-desc">${route.description}</p>
+                <p class="route-desc">${route.description.substring(0, 100)}...</p>
             </div>
         `;
 
@@ -411,8 +433,7 @@ function renderHome() {
 
     initHomeMap().catch(err => {
         console.error('Map init failed:', err);
-        document.getElementById('home-map').innerHTML =
-            '<div style="padding:20px;color:#86868b">Карта не загрузилась. Проверьте API-ключ Яндекс Карт.</div>';
+        document.getElementById('home-map').innerHTML = '<div style="padding:20px;color:#86868b">Ошибка загрузки карты.</div>';
     });
 }
 
@@ -442,7 +463,6 @@ function changeSlide(routeIdx, context, direction, event) {
    ============================================================ */
 async function openArticle(routeId) {
     activeRouteId = routeId;
-    
     const data = getRoutes();
     const route = data.routes.find(r => r.id === routeId);
     if (!route) return;
@@ -487,10 +507,7 @@ async function openArticle(routeId) {
 
     articleMap = new YMap(
         document.getElementById('article-map'),
-        {
-            location: { center: [route.coords[1], route.coords[0]], zoom: 14 },
-            showScaleInCopyrights: true
-        }
+        { location: { center: [route.coords[1], route.coords[0]], zoom: 14 }, showScaleInCopyrights: true }
     );
     articleMap.addChild(new YMapDefaultSchemeLayer({ theme: 'dark' }));
     articleMap.addChild(new YMapDefaultFeaturesLayer());
@@ -501,14 +518,12 @@ async function openArticle(routeId) {
         border: 3px solid #fff; border-radius: 50%;
         box-shadow: 0 2px 10px rgba(0,0,0,0.6);
     `;
-    const marker = new YMapMarker(
-        { coordinates: [route.coords[1], route.coords[0]] },
-        markerEl
-    );
+    const marker = new YMapMarker({ coordinates: [route.coords[1], route.coords[0]] }, markerEl);
     articleMap.addChild(marker);
 }
 
-function goHome() {
+function goHome(e) {
+    if(e) e.preventDefault();
     document.getElementById('page-article').classList.remove('active');
     document.getElementById('page-home').classList.add('active');
     activeRouteId = null;
@@ -516,13 +531,22 @@ function goHome() {
 }
 
 /* ============================================================
-   ADMIN
+   ADMIN LOGIC
    ============================================================ */
 function checkAdminRoute() {
     const path = window.location.pathname;
     if (path === '/admin' || path === '/admin/' || window.location.hash === '#admin') {
         document.getElementById('admin-panel').style.display = 'block';
+        document.body.style.overflow = 'hidden'; // Блокируем скролл основного сайта
     }
+}
+
+function closeAdmin() {
+    document.getElementById('admin-panel').style.display = 'none';
+    document.body.style.overflow = '';
+    window.history.pushState({}, '', '/');
+    // Перерисовываем главную, чтобы увидеть изменения
+    renderHome();
 }
 
 function login() {
@@ -530,20 +554,113 @@ function login() {
     const p = document.getElementById('password').value;
     if (u === 'admin' && p === 'admin') {
         document.getElementById('auth-box').style.display = 'none';
-        document.getElementById('form-box').style.display = 'block';
+        document.getElementById('admin-list-view').style.display = 'block';
+        renderAdminList();
     } else {
         alert('Неверный логин или пароль');
     }
 }
 
-function saveRoute() {
-    const name = document.getElementById('route-name').value;
-    const desc = document.getElementById('route-desc-input').value;
-    const coordsStr = document.getElementById('route-coords').value;
-    const photosStr = document.getElementById('route-photos').value;
+function renderAdminList() {
+    const data = getRoutes();
+    const container = document.getElementById('admin-routes-container');
+    container.innerHTML = '';
 
+    if (data.routes.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted);">Нет добавленных статей.</p>';
+        return;
+    }
+
+    data.routes.forEach(route => {
+        const div = document.createElement('div');
+        div.className = 'admin-list-item';
+        div.innerHTML = `
+            <div style="display:flex; align-items:center; gap:16px;">
+                <img src="${route.photos[0] || ''}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; background:#222;">
+                <div>
+                    <div style="font-weight:600; margin-bottom:4px;">${route.name}</div>
+                    <div style="font-size:12px; color:var(--text-muted);">${route.coords[0]}, ${route.coords[1]}</div>
+                </div>
+            </div>
+            <div class="admin-actions">
+                <button onclick="openEditForm(${route.id})">Ред.</button>
+                <button class="btn-danger" onclick="deleteRoute(${route.id})">Удалить</button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function deleteRoute(id) {
+    if (!confirm('Вы уверены, что хотите удалить эту статью?')) return;
+    const data = getRoutes();
+    data.routes = data.routes.filter(r => r.id !== id);
+    persistRoutes(data);
+    renderAdminList();
+}
+
+/* --- Форма редактирования --- */
+function openEditForm(id) {
+    document.getElementById('admin-list-view').style.display = 'none';
+    document.getElementById('admin-edit-view').style.display = 'block';
+    
+    const photosContainer = document.getElementById('edit-photos-container');
+    photosContainer.innerHTML = '';
+
+    if (id) {
+        // Редактирование существующей
+        const data = getRoutes();
+        const route = data.routes.find(r => r.id === id);
+        if (!route) return;
+
+        document.getElementById('edit-form-title').textContent = 'Редактирование статьи';
+        document.getElementById('edit-id').value = route.id;
+        document.getElementById('edit-name').value = route.name;
+        document.getElementById('edit-desc').value = route.description;
+        document.getElementById('edit-coords').value = `${route.coords[0]}, ${route.coords[1]}`;
+        
+        // Добавляем поля для фото
+        if (route.photos && route.photos.length > 0) {
+            route.photos.forEach(p => addPhotoField(p));
+        } else {
+            addPhotoField();
+        }
+    } else {
+        // Создание новой
+        document.getElementById('edit-form-title').textContent = 'Добавление новой статьи';
+        document.getElementById('edit-id').value = '';
+        document.getElementById('edit-name').value = '';
+        document.getElementById('edit-desc').value = '';
+        document.getElementById('edit-coords').value = '';
+        addPhotoField();
+    }
+}
+
+function backToList() {
+    document.getElementById('admin-edit-view').style.display = 'none';
+    document.getElementById('admin-list-view').style.display = 'block';
+    renderAdminList(); // Обновляем список на случай изменений
+}
+
+function addPhotoField(value = '') {
+    const container = document.getElementById('edit-photos-container');
+    const group = document.createElement('div');
+    group.className = 'photo-input-group';
+    group.innerHTML = `
+        <input type="text" class="form-control photo-url" placeholder="https://..." value="${value}">
+        <button class="btn-remove-photo" onclick="this.parentElement.remove()">✕</button>
+    `;
+    container.appendChild(group);
+}
+
+function saveRoute() {
+    const id = document.getElementById('edit-id').value;
+    const name = document.getElementById('edit-name').value.trim();
+    const desc = document.getElementById('edit-desc').value.trim();
+    const coordsStr = document.getElementById('edit-coords').value.trim();
+    
     if (!name || !desc || !coordsStr) {
-        alert('Заполните обязательные поля');
+        alert('Заполните все обязательные поля');
         return;
     }
 
@@ -553,25 +670,41 @@ function saveRoute() {
         return;
     }
 
-    const photos = photosStr ? photosStr.split(',').map(p => p.trim()).filter(Boolean) : [];
-    const currentData = getRoutes();
-    currentData.routes.push({
-        id: Date.now(),
-        name,
-        description: desc,
-        coords,
-        photos
+    // Собираем все фото
+    const photos = [];
+    document.querySelectorAll('.photo-url').forEach(input => {
+        const val = input.value.trim();
+        if (val) photos.push(val);
     });
-    persistRoutes(currentData);
-    closeAdmin();
-    location.reload();
-}
 
-function closeAdmin() {
-    document.getElementById('admin-panel').style.display = 'none';
-    window.history.pushState({}, '', '/');
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
+    const data = getRoutes();
+
+    if (id) {
+        // Обновление
+        const index = data.routes.findIndex(r => r.id == id);
+        if (index !== -1) {
+            data.routes[index] = {
+                ...data.routes[index],
+                name,
+                description: desc,
+                coords,
+                photos
+            };
+        }
+    } else {
+        // Создание
+        data.routes.push({
+            id: Date.now(),
+            name,
+            description: desc,
+            coords,
+            photos
+        });
+    }
+
+    persistRoutes(data);
+    alert('Сохранено!');
+    backToList();
 }
 
 /* ============================================================
