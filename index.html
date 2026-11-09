@@ -281,9 +281,9 @@ const defaultData = {
 };
 
 function getRoutes() {
-    const raw = localStorage.getItem('kirov_routes_v9');
+    const raw = localStorage.getItem('kirov_routes_v10');
     if (!raw) {
-        localStorage.setItem('kirov_routes_v9', JSON.stringify(defaultData));
+        localStorage.setItem('kirov_routes_v10', JSON.stringify(defaultData));
         return defaultData;
     }
     try {
@@ -294,7 +294,7 @@ function getRoutes() {
 }
 
 function persistRoutes(data) {
-    localStorage.setItem('kirov_routes_v9', JSON.stringify(data));
+    localStorage.setItem('kirov_routes_v10', JSON.stringify(data));
 }
 
 /* ============================================================
@@ -397,7 +397,6 @@ function renderHome() {
         if (route.photos && route.photos.length > 0) {
             sliderHTML = `<div class="slider-container" id="home-slider-${idx}">`;
             route.photos.forEach((p, pi) => {
-                // Используем обычные картинки, браузер сам их подгрузит при появлении
                 sliderHTML += `<img src="${p}" class="slide ${pi === 0 ? 'active' : ''}" alt="" loading="lazy">`;
             });
             if (route.photos.length > 1) {
@@ -530,10 +529,7 @@ async function openArticle(routeId) {
             img.src = p;
             img.className = 'slide' + (pi === 0 ? ' active' : '');
             img.onerror = () => { img.style.display = 'none'; };
-            
-            // Клик для полноэкранного просмотра
             img.onclick = () => openLightbox(route.photos, pi);
-            
             slider.appendChild(img);
         });
         if (route.photos.length > 1) {
@@ -614,8 +610,7 @@ function login() {
         alert('Неверный логин или пароль');
     }
 }
-
-function renderAdminList() {
+    function renderAdminList() {
     const data = getRoutes();
     const container = document.getElementById('admin-routes-container');
     container.innerHTML = '';
@@ -714,4 +709,62 @@ function addPhotoField(value = '') {
 function saveRoute() {
     const id = document.getElementById('edit-id').value;
     const name = document.getElementById('edit-name').value.trim();
-    const
+    const desc = document.getElementById('edit-desc').value.trim();
+    const coordsStr = document.getElementById('edit-coords').value.trim();
+    
+    if (!name || !desc || !coordsStr) {
+        alert('Заполните все обязательные поля');
+        return;
+    }
+
+    const coords = coordsStr.split(',').map(c => parseFloat(c.trim()));
+    if (coords.length !== 2 || isNaN(coords[0]) || isNaN(coords[1])) {
+        alert('Координаты должны быть в формате: широта, долгота');
+        return;
+    }
+
+    const photos = [];
+    document.querySelectorAll('.photo-url').forEach(input => {
+        const val = input.value.trim();
+        if (val) photos.push(val);
+    });
+
+    const data = getRoutes();
+
+    if (id) {
+        const index = data.routes.findIndex(r => r.id == id);
+        if (index !== -1) {
+            data.routes[index] = {
+                ...data.routes[index],
+                name,
+                description: desc,
+                coords,
+                photos
+            };
+        }
+    } else {
+        data.routes.push({
+            id: Date.now(),
+            name,
+            description: desc,
+            coords,
+            photos
+        });
+    }
+
+    persistRoutes(data);
+    alert('Сохранено!');
+    backToList();
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+window.addEventListener('load', () => {
+    renderHome();
+    checkAdminRoute();
+});
+window.addEventListener('popstate', checkAdminRoute);
+</script>
+</body>
+</html>
