@@ -1,12 +1,3 @@
-Проблема с картинками с Unsplash заключается в том, что сервис часто блокирует прямые ссылки на изображения, если они запрашиваются со сторонних сайтов (защита от хотлинка). Из-за этого браузер получает ошибку, и вместо фото вы видите пустоту.
-
-Самый надежный способ получить рабочие и **бесплатные** (без лицензионных отчислений) фото — использовать сервис **Pexels**. Он отдает прямые ссылки на CDN, которые отлично работают на любых сайтах.
-
-Я заменил все ссылки в новом коде на проверенные картинки с Pexels. А также я добавил визуальную пометку в саму статью для автоматически созданных маршрутов.
-
-Вот полный `index.html` (скопируйте его целиком и замените ваш текущий на GitHub):
-
-```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -70,7 +61,7 @@
         }
         .route-card.active { transform: scale(0.99); }
         
-        .slider-container { position: relative; width: 100%; height: 200px; background: #111; }
+        .slider-container { position: relative; width: 100%; height: 200px; background: #111; display: flex; align-items: center; justify-content: center; }
         .slide { width: 100%; height: 100%; object-fit: cover; display: none; }
         .slide.active { display: block; }
         .slider-btn {
@@ -82,6 +73,9 @@
         .slider-btn:hover { background: rgba(0,0,0,0.8); }
         .slider-btn.prev { left: 10px; }
         .slider-btn.next { right: 10px; }
+        
+        .no-photo-placeholder { color: var(--text-muted); font-size: 14px; text-align: center; }
+        
         .route-content { padding: 16px 20px; }
         .route-title { font-size: 17px; font-weight: 600; margin: 0 0 6px; }
         .route-desc { font-size: 13px; line-height: 1.5; color: var(--text-muted); margin: 0; }
@@ -102,7 +96,7 @@
         }
         .back-btn:hover { border-color: var(--accent-color); }
         .article-title { font-size: 32px; font-weight: 700; margin: 0 0 20px; letter-spacing: -0.5px; }
-        .article-slider { position: relative; width: 100%; height: 400px; background: #111; border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
+        .article-slider { position: relative; width: 100%; height: 400px; background: #111; border-radius: 16px; overflow: hidden; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; }
         .article-slider .slide { height: 100%; object-fit: contain; cursor: zoom-in; }
         .article-desc { font-size: 16px; line-height: 1.7; color: var(--text-muted); margin-bottom: 32px; white-space: pre-wrap; }
         .article-map { width: 100%; height: 500px; border-radius: 16px; overflow: hidden; background: #111; border: 1px solid var(--border-color); }
@@ -295,70 +289,52 @@ const defaultData = {
         {
             id: 2,
             name: "Тропа в Порошино (Сформировано автоматически)",
-            description: "Спортивно-туристический комплекс «Порошино» предлагает обустроенные «тропы здоровья» протяжённостью 1, 3 и 5 км . Маршруты проходят через живописный лес недалеко от города, отлично подходят для бега, ходьбы с детьми и зимних лыжных прогулок. На территории также есть верёвочный парк и прокат инвентаря.",
+            description: "Спортивно-туристический комплекс «Порошино» предлагает обустроенные «тропы здоровья» протяжённостью 1, 3 и 5 км. Маршруты проходят через живописный лес недалеко от города, отлично подходят для бега, ходьбы с детьми и зимних лыжных прогулок.",
             coords: [58.6358, 49.8037],
-            photos: [
-                "https://images.pexels.com/photos/167698/pexels-photo-167698.jpeg?auto=compress&cs=tinysrgb&w=800",
-                "https://images.pexels.com/photos/38136/pexels-photo-38136.jpeg?auto=compress&cs=tinysrgb&w=800"
-            ]
+            photos: []
         },
         {
             id: 3,
             name: "Тропа в Костино (Сформировано автоматически)",
-            description: "Лесной массив в районе посёлка Костино и Соснового сквера. Здесь сохранились участки векового соснового леса, проложены прогулочные и экологические тропы . Зимой они используются как лыжные трассы. Место удобно для тихих прогулок на окраине города и доступно для маломобильных групп населения.",
+            description: "Лесной массив в районе посёлка Костино и Соснового сквера. Здесь сохранились участки векового соснового леса, проложены прогулочные и экологические тропы. Зимой они используются как лыжные трассы.",
             coords: [58.5980, 49.6980],
-            photos: [
-                "https://images.pexels.com/photos/144197/pexels-photo-144197.jpeg?auto=compress&cs=tinysrgb&w=800",
-                "https://images.pexels.com/photos/1366909/pexels-photo-1366909.jpeg?auto=compress&cs=tinysrgb&w=800"
-            ]
+            photos: []
         },
         {
             id: 4,
             name: "Заречный парк (Сформировано автоматически)",
-            description: "Памятник природы на правом берегу Вятки напротив исторической части города. Здесь проложена экологическая тропа протяжённостью около 3 км с деревянными настилами и информационными стендами . Маршрут проходит через сосновый бор, мимо пойменных озёр-стариц. Отличное место для семейных прогулок и знакомства с природой Вятского края.",
+            description: "Памятник природы на правом берегу Вятки напротив исторической части города. Здесь проложена экологическая тропа протяжённостью около 3 км с деревянными настилами и информационными стендами. Маршрут проходит через сосновый бор, мимо пойменных озёр-стариц.",
             coords: [58.6080, 49.7042],
-            photos: [
-                "https://images.pexels.com/photos/1770809/pexels-photo-1770809.jpeg?auto=compress&cs=tinysrgb&w=800",
-                "https://images.pexels.com/photos/33109/fall-autumn-red-season.jpg?auto=compress&cs=tinysrgb&w=800"
-            ]
+            photos: []
         },
         {
             id: 5,
             name: "Тропа в п. Сосновый (Сформировано автоматически)",
-            description: "Небольшой посёлок в Кировском городском округе, окружённый смешанными лесами с преобладанием сосны . В окрестностях сохранились лесные массивы, где можно гулять по естественным тропам, собирать грибы и ягоды. Подходит для тех, кто ищет уединённые маршруты без оборудованных дорожек.",
+            description: "Небольшой посёлок в Кировском городском округе, окружённый смешанными лесами с преобладанием сосны. В окрестностях сохранились лесные массивы, где можно гулять по естественным тропам, собирать грибы и ягоды.",
             coords: [58.5833, 49.7500],
-            photos: [
-                "https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=800",
-                "https://images.pexels.com/photos/4751978/pexels-photo-4751978.jpeg?auto=compress&cs=tinysrgb&w=800"
-            ]
+            photos: []
         },
         {
             id: 6,
             name: "Тропа в Пасегово (Сформировано автоматически)",
-            description: "Населённый пункт в Кирово-Чепецком районе, через который проходят популярные пешие и велосипедные маршруты . Дорога пересекает лесные участки и открытые пространства, по пути встречаются живописные перелески и поляны для отдыха. Маршрут можно продолжить до станции Лянгасово.",
+            description: "Населённый пункт в Кирово-Чепецком районе, через который проходят популярные пешие и велосипедные маршруты. Дорога пересекает лесные участки и открытые пространства, по пути встречаются живописные перелески и поляны для отдыха.",
             coords: [58.5333, 49.5500],
-            photos: [
-                "https://images.pexels.com/photos/158251/forest-forest-trees-nature-158251.jpeg?auto=compress&cs=tinysrgb&w=800",
-                "https://images.pexels.com/photos/38136/pexels-photo-38136.jpeg?auto=compress&cs=tinysrgb&w=800"
-            ]
+            photos: []
         },
         {
             id: 7,
-            name: "Тропа на трассе Р-243 (Сосновый лес) (Сформировано автоматически)",
-            description: "Вдоль федеральной трассы Р-243 в сторону Котельнича есть участки соснового леса и смотровая площадка с видом на Вятку . Это скорее остановка для короткой прогулки, чем полноценный маршрут, но отсюда открываются красивые виды на реку и окрестности. Подходит для тех, кто путешествует на машине и хочет размяться.",
-            coords: [58.4000, 48.8000],
-            photos: [
-                "https://images.pexels.com/photos/144197/pexels-photo-144197.jpeg?auto=compress&cs=tinysrgb&w=800",
-                "https://images.pexels.com/photos/167698/pexels-photo-167698.jpeg?auto=compress&cs=tinysrgb&w=800"
-            ]
+            name: "Лесной массив за Новым мостом (Сформировано автоматически)",
+            description: "Лесной массив сразу за Новым мостом через Вятку. Начало тропы начинается прямо от трассы. Рядом находятся садоводческие товарищества и небольшое озеро (старица). В сосновом лесу можно прогуляться по естественным тропам, вдоль берегов озера растут купальницы и водяные лилии. Место подходит для коротких прогулок и отдыха на природе недалеко от города.",
+            coords: [58.688882, 49.704594], // Координаты начала тропы от трассы
+            photos: []
         }
     ]
 };
 
 function getRoutes() {
-    const raw = localStorage.getItem('kirov_routes_v12');
+    const raw = localStorage.getItem('kirov_routes_v13');
     if (!raw) {
-        localStorage.setItem('kirov_routes_v12', JSON.stringify(defaultData));
+        localStorage.setItem('kirov_routes_v13', JSON.stringify(defaultData));
         return defaultData;
     }
     try {
@@ -369,7 +345,7 @@ function getRoutes() {
 }
 
 function persistRoutes(data) {
-    localStorage.setItem('kirov_routes_v12', JSON.stringify(data));
+    localStorage.setItem('kirov_routes_v13', JSON.stringify(data));
 }
 
 /* ============================================================
@@ -482,7 +458,7 @@ function renderHome() {
             }
             sliderHTML += `</div>`;
         } else {
-            sliderHTML = `<div class="slider-container" style="display:flex;align-items:center;justify-content:center;color:#555;">Нет фото</div>`;
+            sliderHTML = `<div class="slider-container"><div class="no-photo-placeholder">Фото не добавлено администратором</div></div>`;
         }
 
         const isAuto = route.name.includes('Сформировано автоматически');
@@ -626,7 +602,7 @@ async function openArticle(routeId) {
             slider.appendChild(nextBtn);
         }
     } else {
-        slider.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#555;">Нет фото</div>';
+        slider.innerHTML = '<div class="no-photo-placeholder">Фото не добавлено администратором</div>';
     }
 
     if (articleMap) {
@@ -637,6 +613,8 @@ async function openArticle(routeId) {
     await ymaps3.ready;
     const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapMarker } = ymaps3;
 
+    // Центрируем карту так, чтобы было видно и начало тропы, и озеро
+    // Можно использовать среднее значение или просто центрироваться на начале
     articleMap = new YMap(
         document.getElementById('article-map'),
         { location: { center: [route.coords[1], route.coords[0]], zoom: 14 }, showScaleInCopyrights: true }
@@ -852,4 +830,3 @@ window.addEventListener('popstate', checkAdminRoute);
 </script>
 </body>
 </html>
-```
