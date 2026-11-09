@@ -79,12 +79,6 @@
         .route-content { padding: 16px 20px; }
         .route-title { font-size: 17px; font-weight: 600; margin: 0 0 6px; }
         .route-desc { font-size: 13px; line-height: 1.5; color: var(--text-muted); margin: 0; }
-        .auto-badge {
-            display: inline-block; font-size: 10px; font-weight: 500;
-            background: rgba(245, 166, 35, 0.15); color: var(--hover-color);
-            padding: 2px 8px; border-radius: 4px; margin-bottom: 6px;
-            text-transform: uppercase; letter-spacing: 0.3px;
-        }
         .map-container { width: 100%; height: 100%; background: #111; }
 
         /* ===== Article ===== */
@@ -288,44 +282,44 @@ const defaultData = {
         },
         {
             id: 2,
-            name: "Тропа в Порошино (Сформировано автоматически)",
+            name: "Тропа в Порошино",
             description: "Спортивно-туристический комплекс «Порошино» предлагает обустроенные «тропы здоровья» протяжённостью 1, 3 и 5 км. Маршруты проходят через живописный лес недалеко от города, отлично подходят для бега, ходьбы с детьми и зимних лыжных прогулок.",
-            coords: [58.6358, 49.8037],
+            coords: [58.6079596, 49.8109436],
             photos: []
         },
         {
             id: 3,
-            name: "Тропа в Костино (Сформировано автоматически)",
-            description: "Лесной массив в районе посёлка Костино и Соснового сквера. Здесь сохранились участки векового соснового леса, проложены прогулочные и экологические тропы. Зимой они используются как лыжные трассы.",
-            coords: [58.5980, 49.6980],
+            name: "Тропа в Костино",
+            description: "Лесной массив за поселком Костино. По лесу проложены множественные тропы для прогулок. Зимой они используются как лыжные трассы.",
+            coords: [58.6119991, 49.4946708],
             photos: []
         },
         {
             id: 4,
-            name: "Заречный парк (Сформировано автоматически)",
+            name: "Заречный парк",
             description: "Памятник природы на правом берегу Вятки напротив исторической части города. Здесь проложена экологическая тропа протяжённостью около 3 км с деревянными настилами и информационными стендами. Маршрут проходит через сосновый бор, мимо пойменных озёр-стариц.",
-            coords: [58.6080, 49.7042],
+            coords: [58.603054, 49.715679],
             photos: []
         },
         {
             id: 5,
-            name: "Тропа в п. Сосновый (Сформировано автоматически)",
-            description: "Небольшой посёлок в Кировском городском округе, окружённый смешанными лесами с преобладанием сосны. В окрестностях сохранились лесные массивы, где можно гулять по естественным тропам, собирать грибы и ягоды.",
-            coords: [58.5833, 49.7500],
+            name: "Тропа в п. Сосновый",
+            description: "Небольшой посёлок, окружённый смешанными лесами с преобладанием сосны. В окрестностях сохранились лесные массивы, где можно гулять по естественным тропам, собирать грибы и ягоды.",
+            coords: [58.6422958, 49.4573006],
             photos: []
         },
         {
             id: 6,
-            name: "Тропа в Пасегово (Сформировано автоматически)",
+            name: "Тропа в Пасегово",
             description: "Населённый пункт в Кирово-Чепецком районе, через который проходят популярные пешие и велосипедные маршруты. Дорога пересекает лесные участки и открытые пространства, по пути встречаются живописные перелески и поляны для отдыха.",
-            coords: [58.5333, 49.5500],
+            coords: [58.509165, 49.515201],
             photos: []
         },
         {
             id: 7,
-            name: "Лесной массив за Новым мостом (Сформировано автоматически)",
-            description: "Лесной массив сразу за Новым мостом через Вятку. Начало тропы начинается прямо от трассы. Рядом находятся садоводческие товарищества и небольшое озеро (старица). В сосновом лесу можно прогуляться по естественным тропам, вдоль берегов озера растут купальницы и водяные лилии. Место подходит для коротких прогулок и отдыха на природе недалеко от города.",
-            coords: [58.688882, 49.704594], // Координаты начала тропы от трассы
+            name: "Лесной массив за Новым мостом",
+            description: "Лесной массив сразу за Новым мостом через Вятку. Начало тропы начинается прямо от трассы. Рядом находятся садоводческие товарищества и небольшое озеро. В сосновом лесу можно прогуляться по множественным тропам. Место подходит для коротких прогулок и отдыха на природе недалеко от города.",
+            coords: [58.688882, 49.704594],
             photos: []
         }
     ]
@@ -461,14 +455,10 @@ function renderHome() {
             sliderHTML = `<div class="slider-container"><div class="no-photo-placeholder">Фото не добавлено администратором</div></div>`;
         }
 
-        const isAuto = route.name.includes('Сформировано автоматически');
-        const displayName = isAuto ? route.name.replace(' (Сформировано автоматически)', '') : route.name;
-
         card.innerHTML = `
             ${sliderHTML}
             <div class="route-content">
-                ${isAuto ? '<span class="auto-badge">Сформировано автоматически</span>' : ''}
-                <h2 class="route-title">${displayName}</h2>
+                <h2 class="route-title">${route.name}</h2>
                 <p class="route-desc">${route.description.substring(0, 100)}...</p>
             </div>
         `;
@@ -571,9 +561,7 @@ async function openArticle(routeId) {
     document.getElementById('page-home').classList.remove('active');
     document.getElementById('page-article').classList.add('active');
 
-    const isAuto = route.name.includes('Сформировано автоматически');
-    const displayName = isAuto ? route.name.replace(' (Сформировано автоматически)', '') : route.name;
-    document.getElementById('article-title').textContent = displayName;
+    document.getElementById('article-title').textContent = route.name;
     document.getElementById('article-desc').textContent = route.description;
 
     const slider = document.getElementById('article-slider');
@@ -613,8 +601,6 @@ async function openArticle(routeId) {
     await ymaps3.ready;
     const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapMarker } = ymaps3;
 
-    // Центрируем карту так, чтобы было видно и начало тропы, и озеро
-    // Можно использовать среднее значение или просто центрироваться на начале
     articleMap = new YMap(
         document.getElementById('article-map'),
         { location: { center: [route.coords[1], route.coords[0]], zoom: 14 }, showScaleInCopyrights: true }
@@ -691,13 +677,11 @@ function renderAdminList() {
             firstPhoto = `<div style="width:60px; height:60px; background:#222; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10px; color:#555;">Нет фото</div>`;
         }
 
-        const displayName = route.name.replace(' (Сформировано автоматически)', '');
-
         div.innerHTML = `
             <div style="display:flex; align-items:center; gap:16px;">
                 ${firstPhoto}
                 <div>
-                    <div style="font-weight:600; margin-bottom:4px;">${displayName}</div>
+                    <div style="font-weight:600; margin-bottom:4px;">${route.name}</div>
                     <div style="font-size:12px; color:var(--text-muted);">${route.coords[0]}, ${route.coords[1]}</div>
                 </div>
             </div>
