@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Пешие маршруты Кирова</title>
+    <!-- Yandex Maps JS API 3.0 -->
+    <script src="https://api-maps.yandex.ru/v3/?apikey=YOUR_API_KEY&lang=ru_RU"></script>
     <style>
         :root {
             --bg-color: #0b0b0c;
@@ -13,7 +15,7 @@
             --text-muted: #86868b;
             --border-color: #2c2c2e;
         }
-
+        * { box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
             margin: 0;
@@ -21,13 +23,15 @@
             color: var(--text-main);
             -webkit-font-smoothing: antialiased;
         }
+        .page { display: none; }
+        .page.active { display: block; }
 
-        .layout {
+        /* ===== Home ===== */
+        .home-layout {
             display: grid;
             grid-template-columns: 450px 1fr;
             height: 100vh;
         }
-
         .sidebar {
             background-color: var(--card-bg);
             border-right: 1px solid var(--border-color);
@@ -35,32 +39,10 @@
             flex-direction: column;
             overflow-y: auto;
         }
-
-        .header {
-            padding: 32px 24px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .header h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin: 0 0 8px 0;
-            letter-spacing: -0.5px;
-        }
-
-        .header p {
-            color: var(--text-muted);
-            margin: 0;
-            font-size: 14px;
-        }
-
-        .routes-list {
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
+        .header { padding: 32px 24px; border-bottom: 1px solid var(--border-color); }
+        .header h1 { font-size: 24px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.5px; }
+        .header p { color: var(--text-muted); margin: 0; font-size: 14px; }
+        .routes-list { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
         .route-card {
             background: var(--bg-color);
             border: 1px solid var(--border-color);
@@ -69,161 +51,90 @@
             cursor: pointer;
             transition: transform 0.2s, border-color 0.2s;
         }
-
-        .route-card:hover, .route-card.active {
-            border-color: var(--accent-color);
-        }
-
-        .slider-container {
-            position: relative;
-            width: 100%;
-            height: 200px;
-            background: #111;
-        }
-
-        .slide {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-        }
-
-        .slide.active {
-            display: block;
-        }
-
+        .route-card:hover, .route-card.active { border-color: var(--accent-color); }
+        .route-card.active { transform: scale(0.99); }
+        .slider-container { position: relative; width: 100%; height: 180px; background: #111; }
+        .slide { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .slide.active { display: block; }
         .slider-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0, 0, 0, 0.6);
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 14px;
-            user-select: none;
-            transition: background 0.2s;
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(0,0,0,0.6); border: none; color: #fff;
+            padding: 8px 12px; cursor: pointer; font-size: 14px; user-select: none;
+            border-radius: 4px; transition: background 0.2s;
         }
+        .slider-btn:hover { background: rgba(0,0,0,0.8); }
+        .slider-btn.prev { left: 10px; }
+        .slider-btn.next { right: 10px; }
+        .route-content { padding: 16px 20px; }
+        .route-title { font-size: 17px; font-weight: 600; margin: 0 0 6px; }
+        .route-desc { font-size: 13px; line-height: 1.5; color: var(--text-muted); margin: 0; }
+        .map-container { width: 100%; height: 100%; background: #111; }
 
-        .slider-btn:hover { background: rgba(0, 0, 0, 0.8); }
-        .slider-btn.prev { left: 10px; border-radius: 4px; }
-        .slider-btn.next { right: 10px; border-radius: 4px; }
-
-        .route-content {
-            padding: 20px;
+        /* ===== Article ===== */
+        .article-view { max-width: 900px; margin: 0 auto; padding: 20px 24px 60px; }
+        .back-btn {
+            display: inline-block; margin-bottom: 20px; padding: 10px 20px;
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 8px; color: var(--text-main); cursor: pointer; font-size: 14px;
         }
+        .back-btn:hover { border-color: var(--accent-color); }
+        .article-title { font-size: 32px; font-weight: 700; margin: 0 0 20px; letter-spacing: -0.5px; }
+        .article-slider { position: relative; width: 100%; height: 360px; background: #111; border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
+        .article-slider .slide { height: 100%; }
+        .article-desc { font-size: 16px; line-height: 1.7; color: var(--text-muted); margin-bottom: 32px; }
+        .article-map { width: 100%; height: 500px; border-radius: 16px; overflow: hidden; background: #111; border: 1px solid var(--border-color); }
 
-        .route-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin: 0 0 8px 0;
-        }
-
-        .route-desc {
-            font-size: 14px;
-            line-height: 1.5;
-            color: var(--text-muted);
-            margin: 0;
-        }
-
-        .map-container {
-            width: 100%;
-            height: 100%;
-            background: #111;
-        }
-
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
+        /* ===== Admin ===== */
         .admin-panel {
-            display: none;
-            padding: 24px;
-            background: var(--card-bg);
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 9999;
+            display: none; padding: 24px; background: var(--card-bg);
+            position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 9999;
             overflow-y: auto;
-            box-sizing: border-box;
         }
-
-        .admin-box {
-            max-width: 600px;
-            margin: 40px auto;
-            background: var(--bg-color);
-            padding: 32px;
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: white;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--accent-color);
-        }
-
-        .btn {
-            background: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .btn-close {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            margin-left: 10px;
-        }
+        .admin-box { max-width: 600px; margin: 40px auto; background: var(--bg-color); padding: 32px; border-radius: 16px; border: 1px solid var(--border-color); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
+        .form-control { width: 100%; padding: 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; color: white; font-size: 14px; }
+        .form-control:focus { outline: none; border-color: var(--accent-color); }
+        .btn { background: var(--accent-color); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 14px; }
+        .btn-close { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); margin-left: 10px; }
 
         @media (max-width: 900px) {
-            .layout { display: flex; flex-direction: column; height: auto; }
-            .map-container { width: 100%; height: 350px; position: sticky; top: 0; z-index: 100; }
+            .home-layout { display: flex; flex-direction: column; height: auto; }
+            .map-container { width: 100%; height: 350px; order: -1; position: sticky; top: 0; z-index: 100; }
             .sidebar { width: 100%; height: auto; border-right: none; }
+            .article-slider { height: 240px; }
+            .article-map { height: 350px; }
         }
     </style>
 </head>
 <body>
 
-<div class="layout">
-    <div class="sidebar">
-        <div class="header">
-            <h1>Маршруты Кирова</h1>
-            <p>Пешие тропы и природные зоны</p>
+<!-- ==================== HOME ==================== -->
+<div id="page-home" class="page active">
+    <div class="home-layout">
+        <div class="sidebar">
+            <div class="header">
+                <h1>Маршруты Кирова</h1>
+                <p>Пешие тропы и природные зоны</p>
+            </div>
+            <div class="routes-list" id="routes-list"></div>
         </div>
-        <div class="routes-list" id="routes-list"></div>
+        <div class="map-container" id="home-map"></div>
     </div>
-    <div class="map-container" id="map-window"></div>
 </div>
 
+<!-- ==================== ARTICLE ==================== -->
+<div id="page-article" class="page">
+    <div class="article-view">
+        <button class="back-btn" onclick="goHome()">← На главную</button>
+        <h1 class="article-title" id="article-title"></h1>
+        <div class="article-slider" id="article-slider"></div>
+        <p class="article-desc" id="article-desc"></p>
+        <div class="article-map" id="article-map"></div>
+    </div>
+</div>
+
+<!-- ==================== ADMIN ==================== -->
 <div class="admin-panel" id="admin-panel">
     <div class="admin-box" id="auth-box">
         <h2 style="margin-top:0;">Вход в управление</h2>
@@ -250,7 +161,7 @@
             <textarea id="route-desc-input" class="form-control" rows="3" placeholder="Описание тропы..."></textarea>
         </div>
         <div class="form-group">
-            <label>Координаты на карте (Широта, Долгота)</label>
+            <label>Координаты (Широта, Долгота)</label>
             <input type="text" id="route-coords" class="form-control" placeholder="58.6080, 49.7042">
         </div>
         <div class="form-group">
@@ -261,204 +172,387 @@
         <button class="btn btn-close" onclick="closeAdmin()">Выйти</button>
     </div>
 </div>
+
 <script>
-    const defaultData = {
-        "routes": [
-            {
-                "id": 1,
-                "name": "Заречный парк",
-                "description": "Памятник природы на левом берегу Вятки. Живописный сосновый бор, чистый воздух и деревянные пешеходные настилы для комфортных прогулок на 3 км.",
-                "coords": [58.6080, 49.7042],
-                "photos": [
-                    "https://unsplash.com", 
-                    "https://unsplash.com"
-                ]
-            },
-            {
-                "id": 2,
-                "name": "Северная набережная",
-                "photos": [
-                    "https://unsplash.com",
-                    "https://unsplash.com"
-                ],
-                "description": "Район Филейки, Северной больницы и спортивного Трамплина. Высокий берег реки Вятки, открывающий красивый панорамный вид на заречные дали.",
-                "coords": [58.6346, 49.6384]
-            },
-            {
-                "id": 3,
-                "name": "Экотропы в Порошино",
-                "description": "Обустроенные лесные просеки разной протяженности от 1 до 5 км. Отличное место жителей города для бега, прогулок выходного дня и зимних лыж.",
-                "coords": [58.6358, 49.8037],
-                "photos": [
-                    "https://unsplash.com",
-                    "https://unsplash.com"
-                ]
-            },
-            {
-                "id": 4,
-                "name": "Вятская большая тропа",
-                "description": "Протяженный природный трек. Старт в черте города начинается от слободы Дымково у старого моста и идет вдоль русла реки в сторону Малой Субботихи.",
-                "coords": [58.6044, 49.6953],
-                "photos": [
-                    "https://unsplash.com",
-                    "https://unsplash.com"
-                ]
-            }
-        ]
-    };
-
-    function getRoutes() {
-        const local = localStorage.getItem('kirov_routes_yandex_embed_v1');
-        if (!local || JSON.parse(local).routes.length < 4) {
-            localStorage.setItem('kirov_routes_yandex_embed_v1', JSON.stringify(defaultData));
-            return defaultData;
+/* ============================================================
+   DATA
+   ============================================================ */
+const defaultData = {
+    routes: [
+        {
+            id: 1,
+            name: "Заречный парк",
+            description: "Памятник природы на левом берегу Вятки. Живописный сосновый бор, чистый воздух и деревянные пешеходные настилы для комфортных прогулок на 3 км.",
+            coords: [58.6080, 49.7042],
+            photos: [
+                "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
+                "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800"
+            ]
+        },
+        {
+            id: 2,
+            name: "Северная набережная",
+            description: "Район Филейки, Северной больницы и спортивного Трамплина. Высокий берег реки Вятки, открывающий красивый панорамный вид на заречные дали.",
+            coords: [58.6346, 49.6384],
+            photos: [
+                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+                "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800"
+            ]
+        },
+        {
+            id: 3,
+            name: "Экотропы в Порошино",
+            description: "Обустроенные лесные просеки разной протяженности от 1 до 5 км. Отличное место для бега, прогулок выходного дня и зимних лыж.",
+            coords: [58.6358, 49.8037],
+            photos: [
+                "https://images.unsplash.com/photo-1448375240586-882707db888b?w=800",
+                "https://images.unsplash.com/photo-1511497584788-876760111969?w=800"
+            ]
+        },
+        {
+            id: 4,
+            name: "Вятская большая тропа",
+            description: "Протяженный природный трек. Старт в черте города начинается от слободы Дымково у старого моста и идет вдоль русла реки в сторону Малой Субботихи.",
+            coords: [58.6044, 49.6953],
+            photos: [
+                "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800",
+                "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800"
+            ]
         }
-        return JSON.parse(local);
+    ]
+};
+
+function getRoutes() {
+    const raw = localStorage.getItem('kirov_routes_v2');
+    if (!raw) {
+        localStorage.setItem('kirov_routes_v2', JSON.stringify(defaultData));
+        return defaultData;
     }
-
-    function renderContent() {
-        const data = getRoutes();
-        const list = document.getElementById('routes-list');
-        list.innerHTML = '';
-
-        data.routes.forEach((route, rIdx) => {
-            const card = document.createElement('div');
-            card.className = 'route-card';
-            card.onclick = () => selectRoute(route.coords, card);
-
-            let sliderHTML = '';
-            if (route.photos && route.photos.length > 0) {
-                sliderHTML = `<div class="slider-container" id="slider-${rIdx}">`;
-                route.photos.forEach((p, pIdx) => {
-                    sliderHTML += `<img src="${p}" class="slide ${pIdx === 0 ? 'active' : ''}" alt="">`;
-                });
-                if (route.photos.length > 1) {
-                    sliderHTML += `
-                        <button class="slider-btn prev" onclick="changeSlide(${rIdx}, -1); event.stopPropagation();">←</button>
-                        <button class="slider-btn next" onclick="changeSlide(${rIdx}, 1); event.stopPropagation();">→</button>
-                    `;
-                }
-                sliderHTML += `</div>`;
-            }
-
-            card.innerHTML = `
-                ${sliderHTML}
-                <div class="route-content">
-                    <h2 class="route-title">${route.name}</h2>
-                    <p class="route-desc">${route.description}</p>
-                </div>
-            `;
-            list.appendChild(card);
-            
-            if (rIdx === 0) {
-                card.classList.add('active');
-                selectRoute(route.coords, card);
-            }
-        });
+    try {
+        const parsed = JSON.parse(raw);
+        if (!parsed.routes || parsed.routes.length === 0) return defaultData;
+        return parsed;
+    } catch (e) {
+        return defaultData;
     }
+}
 
-    function changeSlide(routeIdx, direction) {
-        const container = document.getElementById(`slider-${routeIdx}`);
-        const slides = container.getElementsByClassName('slide');
-        let activeIdx = 0;
-        
-        for (let i = 0; i < slides.length; i++) {
-            if (slides[i].classList.contains('active')) {
-                activeIdx = i;
-                break;
-            }
+function persistRoutes(data) {
+    localStorage.setItem('kirov_routes_v2', JSON.stringify(data));
+}
+
+/* ============================================================
+   YANDEX MAP STATE
+   ============================================================ */
+let homeMap = null;
+let articleMap = null;
+let homePlacemarks = []; // { id, marker, cardEl }
+let activeRouteId = null;
+
+async function initHomeMap() {
+    await ymaps3.ready;
+    const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapMarker } = ymaps3;
+
+    const data = getRoutes();
+    const first = data.routes[0];
+    const center = first ? [first.coords[1], first.coords[0]] : [49.7042, 58.6080];
+
+    homeMap = new YMap(
+        document.getElementById('home-map'),
+        {
+            location: { center, zoom: 12 },
+            showScaleInCopyrights: true
         }
+    );
+    homeMap.addChild(new YMapDefaultSchemeLayer({ theme: 'dark' }));
+    homeMap.addChild(new YMapDefaultFeaturesLayer());
 
-        slides[activeIdx].classList.remove('active');
-        let newIdx = activeIdx + direction;
-        if (newIdx >= slides.length) newIdx = 0;
-        if (newIdx < 0) newIdx = slides.length - 1;
-        slides[newIdx].classList.add('active');
-    }
-</script>
-<script>
-    function selectRoute(coords, cardElement) {
-        const cards = document.getElementsByClassName('route-card');
-        for(let i=0; i<cards.length; i++) {
-            cards[i].classList.remove('active');
-        }
-        if (cardElement) cardElement.classList.add('active');
-
-        const mapContainer = document.getElementById('map-window');
-        // Извлекаем широту и долготу из массива
-        const lat = coords[0];
-        const lng = coords[1];
-        
-        // Используем полностью стабильный бесплатный iframe Яндекс Карт
-        mapContainer.innerHTML = `
-            <iframe 
-                src="https://yandex.ru{lng},${lat}&z=14&pt=${lng},${lat},pm2blm" 
-                allowfullscreen="true">
-            </iframe>
+    // Add markers
+    data.routes.forEach(route => {
+        const markerEl = document.createElement('div');
+        markerEl.style.cssText = `
+            width: 24px; height: 24px; background: #2f80ed;
+            border: 3px solid #fff; border-radius: 50%;
+            cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
         `;
-    }
+        markerEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            onMarkerClick(route.id);
+        });
 
-    function checkAdminRoute() {
-        const path = window.location.pathname;
-        if (path === '/admin' || path === '/admin/' || window.location.hash === '#admin') {
-            document.getElementById('admin-panel').style.display = 'block';
-        }
-    }
-
-    window.addEventListener('popstate', checkAdminRoute);
-    window.addEventListener('load', () => {
-        renderContent();
-        checkAdminRoute();
+        const marker = new YMapMarker(
+            { coordinates: [route.coords[1], route.coords[0]] },
+            markerEl
+        );
+        homeMap.addChild(marker);
+        homePlacemarks.push({ id: route.id, marker, el: markerEl });
     });
 
-    function login() {
-        const u = document.getElementById('username').value;
-        const p = document.getElementById('password').value;
-        if (u === 'admin' && p === 'admin') {
-            document.getElementById('auth-box').style.display = 'none';
-            document.getElementById('form-box').style.display = 'block';
+    // Auto-select first
+    if (data.routes[0]) {
+        setTimeout(() => onMarkerClick(data.routes[0].id, false), 100);
+    }
+}
+
+function onMarkerClick(routeId, navigate = true) {
+    // Highlight card
+    highlightCard(routeId);
+    // Highlight marker
+    highlightMarker(routeId);
+
+    if (navigate) {
+        openArticle(routeId);
+    }
+}
+
+function highlightCard(routeId) {
+    document.querySelectorAll('.route-card').forEach(c => c.classList.remove('active'));
+    const card = document.querySelector(`.route-card[data-id="${routeId}"]`);
+    if (card) {
+        card.classList.add('active');
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function highlightMarker(routeId) {
+    activeRouteId = routeId;
+    homePlacemarks.forEach(p => {
+        if (p.id === routeId) {
+            p.el.style.transform = 'scale(1.3)';
+            p.el.style.background = '#f5a623';
+            p.el.style.zIndex = '10';
         } else {
-            alert('Неверный логин или пароль');
+            p.el.style.transform = 'scale(1)';
+            p.el.style.background = '#2f80ed';
+            p.el.style.zIndex = '1';
+        }
+    });
+}
+
+/* ============================================================
+   HOME RENDER
+   ============================================================ */
+function renderHome() {
+    const data = getRoutes();
+    const list = document.getElementById('routes-list');
+    list.innerHTML = '';
+
+    data.routes.forEach((route, idx) => {
+        const card = document.createElement('div');
+        card.className = 'route-card';
+        card.dataset.id = route.id;
+
+        let sliderHTML = '';
+        if (route.photos && route.photos.length > 0) {
+            sliderHTML = `<div class="slider-container" id="home-slider-${idx}">`;
+            route.photos.forEach((p, pi) => {
+                sliderHTML += `<img src="${p}" class="slide ${pi === 0 ? 'active' : ''}" alt="">`;
+            });
+            if (route.photos.length > 1) {
+                sliderHTML += `
+                    <button class="slider-btn prev" onclick="changeSlide(${idx}, 'home', -1, event)">←</button>
+                    <button class="slider-btn next" onclick="changeSlide(${idx}, 'home', 1, event)">→</button>
+                `;
+            }
+            sliderHTML += `</div>`;
+        }
+
+        card.innerHTML = `
+            ${sliderHTML}
+            <div class="route-content">
+                <h2 class="route-title">${route.name}</h2>
+                <p class="route-desc">${route.description}</p>
+            </div>
+        `;
+
+        // Click on card (but not on slider buttons) -> select on map + open article
+        card.addEventListener('click', (e) => {
+            if (e.target.classList.contains('slider-btn')) return;
+            onMarkerClick(route.id, true);
+        });
+
+        list.appendChild(card);
+    });
+
+    // Init map after DOM
+    initHomeMap().catch(err => {
+        console.error('Map init failed:', err);
+        document.getElementById('home-map').innerHTML =
+            '<div style="padding:20px;color:#86868b">Карта не загрузилась. Проверьте API-ключ Яндекс Карт.</div>';
+    });
+}
+
+/* ============================================================
+   SLIDER
+   ============================================================ */
+function changeSlide(routeIdx, context, direction, event) {
+    if (event) event.stopPropagation();
+    const prefix = context === 'home' ? 'home-slider' : 'article-slider';
+    const container = document.getElementById(`${prefix}-${routeIdx}`);
+    if (!container) return;
+
+    const slides = container.getElementsByClassName('slide');
+    let activeIdx = 0;
+    for (let i = 0; i < slides.length; i++) {
+        if (slides[i].classList.contains('active')) { activeIdx = i; break; }
+    }
+    slides[activeIdx].classList.remove('active');
+    let newIdx = activeIdx + direction;
+    if (newIdx >= slides.length) newIdx = 0;
+    if (newIdx < 0) newIdx = slides.length - 1;
+    slides[newIdx].classList.add('active');
+}
+
+/* ============================================================
+   ARTICLE PAGE
+   ============================================================ */
+async function openArticle(routeId) {
+    const data = getRoutes();
+    const route = data.routes.find(r => r.id === routeId);
+    if (!route) return;
+
+    // Show article page
+    document.getElementById('page-home').classList.remove('active');
+    document.getElementById('page-article').classList.add('active');
+
+    // Fill content
+    document.getElementById('article-title').textContent = route.name;
+    document.getElementById('article-desc').textContent = route.description;
+
+    // Slider
+    const slider = document.getElementById('article-slider');
+    slider.innerHTML = '';
+    slider.id = 'article-slider-0';
+    if (route.photos && route.photos.length > 0) {
+        route.photos.forEach((p, pi) => {
+            const img = document.createElement('img');
+            img.src = p;
+            img.className = 'slide' + (pi === 0 ? ' active' : '');
+            slider.appendChild(img);
+        });
+        if (route.photos.length > 1) {
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'slider-btn prev';
+            prevBtn.textContent = '←';
+            prevBtn.onclick = (e) => changeSlide(0, 'article', -1, e);
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'slider-btn next';
+            nextBtn.textContent = '→';
+            nextBtn.onclick = (e) => changeSlide(0, 'article', 1, e);
+            slider.appendChild(prevBtn);
+            slider.appendChild(nextBtn);
         }
     }
 
-    function saveRoute() {
-        const name = document.getElementById('route-name').value;
-        const desc = document.getElementById('route-desc-input').value;
-        const coordsStr = document.getElementById('route-coords').value;
-        const photosStr = document.getElementById('route-photos').value;
+    // Init article map
+    if (articleMap) {
+        // Remove old map by clearing container (Yandex API 3 doesn't have destroy, recreate)
+        document.getElementById('article-map').innerHTML = '';
+        articleMap = null;
+    }
 
-        if (!name || !desc || !coordsStr) {
-            alert('Заполните обязательные поля');
-            return;
+    await ymaps3.ready;
+    const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapMarker } = ymaps3;
+
+    articleMap = new YMap(
+        document.getElementById('article-map'),
+        {
+            location: { center: [route.coords[1], route.coords[0]], zoom: 14 },
+            showScaleInCopyrights: true
         }
+    );
+    articleMap.addChild(new YMapDefaultSchemeLayer({ theme: 'dark' }));
+    articleMap.addChild(new YMapDefaultFeaturesLayer());
 
-        const coords = coordsStr.split(',').map(c => parseFloat(c.trim()));
-        const photos = photosStr ? photosStr.split(',').map(p => p.trim()) : [];
+    const markerEl = document.createElement('div');
+    markerEl.style.cssText = `
+        width: 28px; height: 28px; background: #f5a623;
+        border: 3px solid #fff; border-radius: 50%;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+    `;
+    const marker = new YMapMarker(
+        { coordinates: [route.coords[1], route.coords[0]] },
+        markerEl
+    );
+    articleMap.addChild(marker);
+}
 
-        const currentData = getRoutes();
-        const newRoute = {
-            id: Date.now(),
-            name: name,
-            description: desc,
-            coords: coords,
-            photos: photos
-        };
+function goHome() {
+    document.getElementById('page-article').classList.remove('active');
+    document.getElementById('page-home').classList.add('active');
+    // Re-highlight current
+    if (activeRouteId) highlightCard(activeRouteId);
+}
 
-        currentData.routes.push(newRoute);
-        localStorage.setItem('kirov_routes_yandex_embed_v1', JSON.stringify(currentData));
-        
-        renderContent();
-        closeAdmin();
-        alert('Маршрут успешно добавлен!');
+/* ============================================================
+   ADMIN (unchanged logic, minor cleanup)
+   ============================================================ */
+function checkAdminRoute() {
+    const path = window.location.pathname;
+    if (path === '/admin' || path === '/admin/' || window.location.hash === '#admin') {
+        document.getElementById('admin-panel').style.display = 'block';
+    }
+}
+
+function login() {
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+    if (u === 'admin' && p === 'admin') {
+        document.getElementById('auth-box').style.display = 'none';
+        document.getElementById('form-box').style.display = 'block';
+    } else {
+        alert('Неверный логин или пароль');
+    }
+}
+
+function saveRoute() {
+    const name = document.getElementById('route-name').value;
+    const desc = document.getElementById('route-desc-input').value;
+    const coordsStr = document.getElementById('route-coords').value;
+    const photosStr = document.getElementById('route-photos').value;
+
+    if (!name || !desc || !coordsStr) {
+        alert('Заполните обязательные поля');
+        return;
     }
 
-    function closeAdmin() {
-        document.getElementById('admin-panel').style.display = 'none';
-        window.history.pushState({}, '', '/');
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
+    const coords = coordsStr.split(',').map(c => parseFloat(c.trim()));
+    if (coords.length !== 2 || isNaN(coords[0]) || isNaN(coords[1])) {
+        alert('Координаты должны быть в формате: широта, долгота');
+        return;
     }
+
+    const photos = photosStr ? photosStr.split(',').map(p => p.trim()).filter(Boolean) : [];
+    const currentData = getRoutes();
+    currentData.routes.push({
+        id: Date.now(),
+        name,
+        description: desc,
+        coords,
+        photos
+    });
+    persistRoutes(currentData);
+    closeAdmin();
+    // Reload home to reflect new data
+    location.reload();
+}
+
+function closeAdmin() {
+    document.getElementById('admin-panel').style.display = 'none';
+    window.history.pushState({}, '', '/');
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+window.addEventListener('load', () => {
+    renderHome();
+    checkAdminRoute();
+});
+window.addEventListener('popstate', checkAdminRoute);
 </script>
 </body>
 </html>
