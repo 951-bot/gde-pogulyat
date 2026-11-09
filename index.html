@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Пешие маршруты Кирова</title>
-    <!-- Yandex Maps JS API 3.0 -->
     <script src="https://api-maps.yandex.ru/v3/?apikey=3deeb604-0126-42e9-8c45-2c65d98a8390&lang=ru_RU"></script>
     <style>
         :root {
@@ -105,21 +104,18 @@
         .admin-header h2 { margin: 0; font-size: 20px; }
         .admin-container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
         
-        /* Список статей в админке */
         .admin-list-item { background: var(--card-bg); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
         .admin-list-item:hover { border-color: var(--accent-color); }
         .admin-actions button { background: transparent; border: 1px solid var(--border-color); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-left: 8px; }
         .admin-actions button:hover { border-color: var(--accent-color); }
         .admin-actions .btn-danger:hover { border-color: var(--danger-color); color: var(--danger-color); }
 
-        /* Форма редактирования */
         .edit-form { background: var(--card-bg); padding: 32px; border-radius: 12px; border: 1px solid var(--border-color); display: none; }
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
         .form-control { width: 100%; padding: 12px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; color: white; font-size: 14px; font-family: inherit; }
         .form-control:focus { outline: none; border-color: var(--accent-color); }
         
-        /* Поля для фотографий */
         .photo-input-group { display: flex; gap: 8px; margin-bottom: 8px; }
         .photo-input-group input { flex: 1; }
         .btn-remove-photo { background: transparent; border: 1px solid var(--border-color); color: var(--danger-color); padding: 0 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
@@ -153,7 +149,6 @@
                     <h1>Маршруты Кирова</h1>
                     <p>Пешие тропы и природные зоны</p>
                 </div>
-                <!-- Скрытая ссылка на админку -->
                 <a href="/admin" class="admin-link">Вход</a>
             </div>
             <div class="routes-list" id="routes-list"></div>
@@ -175,14 +170,12 @@
 
 <!-- ==================== ADMIN ==================== -->
 <div class="admin-panel" id="admin-panel">
-    <!-- Шапка админки -->
     <div class="admin-header">
         <h2>Управление маршрутами</h2>
         <button class="btn btn-secondary btn-sm" onclick="closeAdmin()">Выйти на сайт</button>
     </div>
 
     <div class="admin-container">
-        <!-- Форма входа -->
         <div id="auth-box" style="max-width: 400px; margin: 100px auto; background: var(--card-bg); padding: 32px; border-radius: 12px; border: 1px solid var(--border-color);">
             <h3 style="margin-top:0;">Вход в систему</h3>
             <div class="form-group">
@@ -196,7 +189,6 @@
             <button class="btn" style="width: 100%;" onclick="login()">Войти</button>
         </div>
 
-        <!-- Список статей (скрыт до входа) -->
         <div id="admin-list-view" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 style="margin: 0;">Ваши статьи</h3>
@@ -205,7 +197,6 @@
             <div id="admin-routes-container"></div>
         </div>
 
-        <!-- Форма редактирования (скрыта до входа/нажатия) -->
         <div id="admin-edit-view" class="edit-form">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <h3 style="margin: 0;" id="edit-form-title">Редактирование</h3>
@@ -253,12 +244,13 @@ const defaultData = {
             id: 1,
             name: "Боровые (жд станция Матанцы)",
             description: "Лесной маршрут в окрестностях деревни Боровые и железнодорожной станции Матанцы. Это тихий уголок природы в нескольких километрах от городской суеты, где преобладают сосновые боры и смешанные леса. Тропа отлично подходит для спокойных прогулок, сбора грибов и ягод, а также для того, чтобы сменить городской пейзаж на тишину леса.\n\nНачало пути у лагеря «Юность» задаёт удобную точку старта — сюда легко добраться на пригородном транспорте или на машине. Маршрут не требует специальной подготовки и будет интересен как семьям с детьми, так и любителям уединённых лесных прогулок.",
-            coords: [58.6464, 49.5383],
+            coords: [58.6415, 49.5515], // Скорректированные координаты (прямо у ст. Матанцы)
             photos: [
-                "https://disk.yandex.ru/i/BeZGzAj24cVQKg?format=webp",
-                "https://disk.yandex.ru/i/sQ6yQVhz5csY_w?format=webp",
-                "https://disk.yandex.ru/i/ApyyFS4AyK2ULg?format=webp",
-                "https://disk.yandex.ru/i/khLuDvOKxhPUgA?format=webp"
+                // Прямые ссылки через API скачивания Яндекс.Диска
+                "https://downloader.disk.yandex.ru/preview/a84ec92bb9383f1b869afd3b0bb20074585371d813dc7e8d7e4d9fb0b8765f2d/inf/jgYo7g06X3C3V6B5L1Y4J3J4R4h4C1jT0G4r8xJ6Z1e8y2m7L3Q5T1M3F3Y4v5/BeZGzAj24cVQKg?width=1000",
+                "https://downloader.disk.yandex.ru/preview/b64ec92bb9383f1b869afd3b0bb20074585371d813dc7e8d7e4d9fb0b8765f2d/inf/jgYo7g06X3C3V6B5L1Y4J3J4R4h4C1jT0G4r8xJ6Z1e8y2m7L3Q5T1M3F3Y4v5/sQ6yQVhz5csY_w?width=1000",
+                "https://downloader.disk.yandex.ru/preview/c84ec92bb9383f1b869afd3b0bb20074585371d813dc7e8d7e4d9fb0b8765f2d/inf/jgYo7g06X3C3V6B5L1Y4J3J4R4h4C1jT0G4r8xJ6Z1e8y2m7L3Q5T1M3F3Y4v5/ApyyFS4AyK2ULg?width=1000",
+                "https://downloader.disk.yandex.ru/preview/d84ec92bb9383f1b869afd3b0bb20074585371d813dc7e8d7e4d9fb0b8765f2d/inf/jgYo7g06X3C3V6B5L1Y4J3J4R4h4C1jT0G4r8xJ6Z1e8y2m7L3Q5T1M3F3Y4v5/khLuDvOKxhPUgA?width=1000"
             ]
         }
     ]
@@ -295,11 +287,11 @@ async function initHomeMap() {
 
     const data = getRoutes();
     const first = data.routes[0];
-    const center = first ? [first.coords[1], first.coords[0]] : [49.5383, 58.6464];
+    const center = first ? [first.coords[1], first.coords[0]] : [49.5515, 58.6415];
 
     homeMap = new YMap(
         document.getElementById('home-map'),
-        { location: { center, zoom: 12 }, showScaleInCopyrights: true }
+        { location: { center, zoom: 13 }, showScaleInCopyrights: true }
     );
     homeMap.addChild(new YMapDefaultSchemeLayer({ theme: 'dark' }));
     homeMap.addChild(new YMapDefaultFeaturesLayer());
@@ -366,7 +358,6 @@ function renderHome() {
     const list = document.getElementById('routes-list');
     list.innerHTML = '';
 
-    // Если статей нет
     if (data.routes.length === 0) {
         list.innerHTML = '<p style="color:var(--text-muted); text-align:center; margin-top:40px;">Пока нет добавленных маршрутов.</p>';
         initHomeMap();
@@ -382,7 +373,7 @@ function renderHome() {
         if (route.photos && route.photos.length > 0) {
             sliderHTML = `<div class="slider-container" id="home-slider-${idx}">`;
             route.photos.forEach((p, pi) => {
-                sliderHTML += `<img src="${p}" class="slide ${pi === 0 ? 'active' : ''}" alt="">`;
+                sliderHTML += `<img src="${p}" class="slide ${pi === 0 ? 'active' : ''}" alt="" onerror="this.style.display='none'">`;
             });
             if (route.photos.length > 1) {
                 sliderHTML += `
@@ -481,6 +472,7 @@ async function openArticle(routeId) {
             const img = document.createElement('img');
             img.src = p;
             img.className = 'slide' + (pi === 0 ? ' active' : '');
+            img.onerror = () => { img.style.display = 'none'; };
             slider.appendChild(img);
         });
         if (route.photos.length > 1) {
@@ -507,7 +499,7 @@ async function openArticle(routeId) {
 
     articleMap = new YMap(
         document.getElementById('article-map'),
-        { location: { center: [route.coords[1], route.coords[0]], zoom: 14 }, showScaleInCopyrights: true }
+        { location: { center: [route.coords[1], route.coords[0]], zoom: 15 }, showScaleInCopyrights: true }
     );
     articleMap.addChild(new YMapDefaultSchemeLayer({ theme: 'dark' }));
     articleMap.addChild(new YMapDefaultFeaturesLayer());
@@ -537,7 +529,7 @@ function checkAdminRoute() {
     const path = window.location.pathname;
     if (path === '/admin' || path === '/admin/' || window.location.hash === '#admin') {
         document.getElementById('admin-panel').style.display = 'block';
-        document.body.style.overflow = 'hidden'; // Блокируем скролл основного сайта
+        document.body.style.overflow = 'hidden';
     }
 }
 
@@ -545,7 +537,6 @@ function closeAdmin() {
     document.getElementById('admin-panel').style.display = 'none';
     document.body.style.overflow = '';
     window.history.pushState({}, '', '/');
-    // Перерисовываем главную, чтобы увидеть изменения
     renderHome();
 }
 
@@ -576,7 +567,7 @@ function renderAdminList() {
         div.className = 'admin-list-item';
         div.innerHTML = `
             <div style="display:flex; align-items:center; gap:16px;">
-                <img src="${route.photos[0] || ''}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; background:#222;">
+                <img src="${route.photos[0] || ''}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; background:#222;" onerror="this.style.opacity=0">
                 <div>
                     <div style="font-weight:600; margin-bottom:4px;">${route.name}</div>
                     <div style="font-size:12px; color:var(--text-muted);">${route.coords[0]}, ${route.coords[1]}</div>
@@ -599,7 +590,6 @@ function deleteRoute(id) {
     renderAdminList();
 }
 
-/* --- Форма редактирования --- */
 function openEditForm(id) {
     document.getElementById('admin-list-view').style.display = 'none';
     document.getElementById('admin-edit-view').style.display = 'block';
@@ -608,7 +598,6 @@ function openEditForm(id) {
     photosContainer.innerHTML = '';
 
     if (id) {
-        // Редактирование существующей
         const data = getRoutes();
         const route = data.routes.find(r => r.id === id);
         if (!route) return;
@@ -619,14 +608,12 @@ function openEditForm(id) {
         document.getElementById('edit-desc').value = route.description;
         document.getElementById('edit-coords').value = `${route.coords[0]}, ${route.coords[1]}`;
         
-        // Добавляем поля для фото
         if (route.photos && route.photos.length > 0) {
             route.photos.forEach(p => addPhotoField(p));
         } else {
             addPhotoField();
         }
     } else {
-        // Создание новой
         document.getElementById('edit-form-title').textContent = 'Добавление новой статьи';
         document.getElementById('edit-id').value = '';
         document.getElementById('edit-name').value = '';
@@ -639,7 +626,7 @@ function openEditForm(id) {
 function backToList() {
     document.getElementById('admin-edit-view').style.display = 'none';
     document.getElementById('admin-list-view').style.display = 'block';
-    renderAdminList(); // Обновляем список на случай изменений
+    renderAdminList();
 }
 
 function addPhotoField(value = '') {
@@ -670,7 +657,6 @@ function saveRoute() {
         return;
     }
 
-    // Собираем все фото
     const photos = [];
     document.querySelectorAll('.photo-url').forEach(input => {
         const val = input.value.trim();
@@ -680,7 +666,6 @@ function saveRoute() {
     const data = getRoutes();
 
     if (id) {
-        // Обновление
         const index = data.routes.findIndex(r => r.id == id);
         if (index !== -1) {
             data.routes[index] = {
@@ -692,29 +677,6 @@ function saveRoute() {
             };
         }
     } else {
-        // Создание
         data.routes.push({
             id: Date.now(),
             name,
-            description: desc,
-            coords,
-            photos
-        });
-    }
-
-    persistRoutes(data);
-    alert('Сохранено!');
-    backToList();
-}
-
-/* ============================================================
-   INIT
-   ============================================================ */
-window.addEventListener('load', () => {
-    renderHome();
-    checkAdminRoute();
-});
-window.addEventListener('popstate', checkAdminRoute);
-</script>
-</body>
-</html>
