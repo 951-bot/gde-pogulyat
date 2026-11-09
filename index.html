@@ -88,9 +88,30 @@
         .back-btn:hover { border-color: var(--accent-color); }
         .article-title { font-size: 32px; font-weight: 700; margin: 0 0 20px; letter-spacing: -0.5px; }
         .article-slider { position: relative; width: 100%; height: 400px; background: #111; border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
-        .article-slider .slide { height: 100%; object-fit: contain; }
+        .article-slider .slide { height: 100%; object-fit: contain; cursor: zoom-in; }
         .article-desc { font-size: 16px; line-height: 1.7; color: var(--text-muted); margin-bottom: 32px; white-space: pre-wrap; }
         .article-map { width: 100%; height: 500px; border-radius: 16px; overflow: hidden; background: #111; border: 1px solid var(--border-color); }
+
+        /* ===== Lightbox (Полноэкранный просмотр) ===== */
+        .lightbox {
+            display: none; position: fixed; inset: 0; z-index: 10000;
+            background: rgba(0, 0, 0, 0.95); align-items: center; justify-content: center;
+        }
+        .lightbox.active { display: flex; }
+        .lightbox-img { max-width: 90vw; max-height: 90vh; object-fit: contain; }
+        .lightbox-close {
+            position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px;
+            cursor: pointer; user-select: none; line-height: 1;
+        }
+        .lightbox-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(255,255,255,0.1); border: none; color: #fff;
+            padding: 16px 24px; cursor: pointer; font-size: 24px; border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .lightbox-btn:hover { background: rgba(255,255,255,0.2); }
+        .lightbox-prev { left: 20px; }
+        .lightbox-next { right: 20px; }
 
         /* ===== Admin ===== */
         .admin-panel {
@@ -163,6 +184,14 @@
     </div>
 </div>
 
+<!-- ==================== LIGHTBOX ==================== -->
+<div class="lightbox" id="lightbox">
+    <span class="lightbox-close" onclick="closeLightbox()">×</span>
+    <img class="lightbox-img" id="lightbox-img" src="" alt="">
+    <button class="lightbox-btn lightbox-prev" onclick="changeLightboxSlide(-1)">←</button>
+    <button class="lightbox-btn lightbox-next" onclick="changeLightboxSlide(1)">→</button>
+</div>
+
 <!-- ==================== ADMIN ==================== -->
 <div class="admin-panel" id="admin-panel">
     <div class="admin-header">
@@ -171,7 +200,6 @@
     </div>
 
     <div class="admin-container">
-        <!-- Вход -->
         <div id="auth-box" style="max-width: 400px; margin: 100px auto; background: var(--card-bg); padding: 32px; border-radius: 12px; border: 1px solid var(--border-color);">
             <h3 style="margin-top:0;">Вход в систему</h3>
             <div class="form-group">
@@ -185,7 +213,6 @@
             <button class="btn" style="width: 100%;" onclick="login()">Войти</button>
         </div>
 
-        <!-- Список статей -->
         <div id="admin-list-view" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 style="margin: 0;">Ваши статьи</h3>
@@ -194,7 +221,6 @@
             <div id="admin-routes-container"></div>
         </div>
 
-        <!-- Форма редактирования -->
         <div id="admin-edit-view" class="edit-form">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <h3 style="margin: 0;" id="edit-form-title">Редактирование</h3>
@@ -242,7 +268,7 @@ const defaultData = {
             id: 1,
             name: "Боровые (жд станция Матанцы)",
             description: "Лесной маршрут в окрестностях деревни Боровые и железнодорожной станции Матанцы. Это тихий уголок природы в нескольких километрах от городской суеты, где преобладают сосновые боры и смешанные леса. Тропа отлично подходит для спокойных прогулок, сбора грибов и ягод, а также для того, чтобы сменить городской пейзаж на тишину леса.\n\nНачало пути у лагеря «Юность» задаёт удобную точку старта — сюда легко добраться на пригородном транспорте или на машине. Маршрут не требует специальной подготовки и будет интересен как семьям с детьми, так и любителям уединённых лесных прогулок.",
-            coords: [58.647463, 49.532364], // ИСПРАВЛЕННЫЕ КООРДИНАТЫ
+            coords: [58.647463, 49.532364],
             photos: [
                 "/photos/borovie/PXL_20261108_102111077.jpg",
                 "/photos/borovie/PXL_20261108_095844515.jpg",
@@ -254,9 +280,9 @@ const defaultData = {
 };
 
 function getRoutes() {
-    const raw = localStorage.getItem('kirov_routes_v7'); // Обновил версию кэша
+    const raw = localStorage.getItem('kirov_routes_v8');
     if (!raw) {
-        localStorage.setItem('kirov_routes_v7', JSON.stringify(defaultData));
+        localStorage.setItem('kirov_routes_v8', JSON.stringify(defaultData));
         return defaultData;
     }
     try {
@@ -267,15 +293,7 @@ function getRoutes() {
 }
 
 function persistRoutes(data) {
-    localStorage.setItem('kirov_routes_v7', JSON.stringify(data));
-}
-
-// Функция для создания легкого превью через wsrv.nl
-function getOptimizedImage(originalPath) {
-    if (!originalPath) return '';
-    if (originalPath.startsWith('http')) return originalPath;
-    const fullUrl = window.location.origin + originalPath;
-    return `https://wsrv.nl/?url=${encodeURIComponent(fullUrl)}&w=400&output=webp`;
+    localStorage.setItem('kirov_routes_v8', JSON.stringify(data));
 }
 
 /* ============================================================
@@ -378,8 +396,8 @@ function renderHome() {
         if (route.photos && route.photos.length > 0) {
             sliderHTML = `<div class="slider-container" id="home-slider-${idx}">`;
             route.photos.forEach((p, pi) => {
-                const thumbSrc = getOptimizedImage(p);
-                sliderHTML += `<img src="${thumbSrc}" class="slide ${pi === 0 ? 'active' : ''}" alt="" loading="lazy">`;
+                // Добавил loading="lazy" для оптимизации загрузки
+                sliderHTML += `<img src="${p}" class="slide ${pi === 0 ? 'active' : ''}" alt="" loading="lazy">`;
             });
             if (route.photos.length > 1) {
                 sliderHTML += `
@@ -435,7 +453,7 @@ function renderHome() {
 }
 
 /* ============================================================
-   SLIDER
+   SLIDER & LIGHTBOX
    ============================================================ */
 function changeSlide(routeIdx, context, direction, event) {
     if (event) event.stopPropagation();
@@ -453,6 +471,38 @@ function changeSlide(routeIdx, context, direction, event) {
     if (newIdx >= slides.length) newIdx = 0;
     if (newIdx < 0) newIdx = slides.length - 1;
     slides[newIdx].classList.add('active');
+}
+
+let currentLightboxImages = [];
+let currentLightboxIndex = 0;
+
+function openLightbox(images, startIndex) {
+    currentLightboxImages = images;
+    currentLightboxIndex = startIndex;
+    updateLightbox();
+    document.getElementById('lightbox').classList.add('active');
+}
+
+function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('active');
+}
+
+function changeLightboxSlide(direction) {
+    currentLightboxIndex += direction;
+    if (currentLightboxIndex >= currentLightboxImages.length) currentLightboxIndex = 0;
+    if (currentLightboxIndex < 0) currentLightboxIndex = currentLightboxImages.length - 1;
+    updateLightbox();
+}
+
+function updateLightbox() {
+    const img = document.getElementById('lightbox-img');
+    img.src = currentLightboxImages[currentLightboxIndex];
+    
+    // Скрываем кнопки навигации, если фото всего одно
+    const btns = document.querySelectorAll('.lightbox-btn');
+    btns.forEach(btn => {
+        btn.style.display = currentLightboxImages.length > 1 ? 'block' : 'none';
+    });
 }
 
 /* ============================================================
@@ -473,12 +523,17 @@ async function openArticle(routeId) {
     const slider = document.getElementById('article-slider');
     slider.innerHTML = '';
     slider.id = 'article-slider-0';
+    
     if (route.photos && route.photos.length > 0) {
         route.photos.forEach((p, pi) => {
             const img = document.createElement('img');
             img.src = p;
             img.className = 'slide' + (pi === 0 ? ' active' : '');
             img.onerror = () => { img.style.display = 'none'; };
+            
+            // Добавляем событие клика для открытия лайтбокса
+            img.onclick = () => openLightbox(route.photos, pi);
+            
             slider.appendChild(img);
         });
         if (route.photos.length > 1) {
@@ -576,8 +631,7 @@ function renderAdminList() {
         
         let firstPhoto = '';
         if (route.photos && route.photos.length > 0) {
-            const thumb = getOptimizedImage(route.photos[0]);
-            firstPhoto = `<img src="${thumb}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; background:#222;" onerror="this.style.opacity=0">`;
+            firstPhoto = `<img src="${route.photos[0]}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; background:#222;" onerror="this.style.opacity=0">`;
         } else {
             firstPhoto = `<div style="width:60px; height:60px; background:#222; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10px; color:#555;">Нет фото</div>`;
         }
@@ -657,65 +711,4 @@ function addPhotoField(value = '') {
     container.appendChild(group);
 }
 
-function saveRoute() {
-    const id = document.getElementById('edit-id').value;
-    const name = document.getElementById('edit-name').value.trim();
-    const desc = document.getElementById('edit-desc').value.trim();
-    const coordsStr = document.getElementById('edit-coords').value.trim();
-    
-    if (!name || !desc || !coordsStr) {
-        alert('Заполните все обязательные поля');
-        return;
-    }
-
-    const coords = coordsStr.split(',').map(c => parseFloat(c.trim()));
-    if (coords.length !== 2 || isNaN(coords[0]) || isNaN(coords[1])) {
-        alert('Координаты должны быть в формате: широта, долгота');
-        return;
-    }
-
-    const photos = [];
-    document.querySelectorAll('.photo-url').forEach(input => {
-        const val = input.value.trim();
-        if (val) photos.push(val);
-    });
-
-    const data = getRoutes();
-
-    if (id) {
-        const index = data.routes.findIndex(r => r.id == id);
-        if (index !== -1) {
-            data.routes[index] = {
-                ...data.routes[index],
-                name,
-                description: desc,
-                coords,
-                photos
-            };
-        }
-    } else {
-        data.routes.push({
-            id: Date.now(),
-            name,
-            description: desc,
-            coords,
-            photos
-        });
-    }
-
-    persistRoutes(data);
-    alert('Сохранено!');
-    backToList();
-}
-
-/* ============================================================
-   INIT
-   ============================================================ */
-window.addEventListener('load', () => {
-    renderHome();
-    checkAdminRoute();
-});
-window.addEventListener('popstate', checkAdminRoute);
-</script>
-</body>
-</html>
+function save
