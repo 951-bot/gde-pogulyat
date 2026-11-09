@@ -11,6 +11,7 @@
             --bg-color: #0b0b0c;
             --card-bg: #161618;
             --accent-color: #2f80ed;
+            --hover-color: #f5a623; /* Цвет для наведения */
             --text-main: #f5f5f7;
             --text-muted: #86868b;
             --border-color: #2c2c2e;
@@ -43,16 +44,25 @@
         .header h1 { font-size: 24px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.5px; }
         .header p { color: var(--text-muted); margin: 0; font-size: 14px; }
         .routes-list { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+        
         .route-card {
             background: var(--bg-color);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             overflow: hidden;
             cursor: pointer;
-            transition: transform 0.2s, border-color 0.2s;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
         }
-        .route-card:hover, .route-card.active { border-color: var(--accent-color); }
-        .route-card.active { transform: scale(0.99); }
+        /* Стиль при наведении или если карточка активна */
+        .route-card:hover, .route-card.active { 
+            border-color: var(--accent-color); 
+            box-shadow: 0 4px 12px rgba(47, 128, 237, 0.15);
+        }
+        .route-card.active { 
+            transform: scale(0.99); 
+            border-color: var(--accent-color);
+        }
+        
         .slider-container { position: relative; width: 100%; height: 180px; background: #111; }
         .slide { width: 100%; height: 100%; object-fit: cover; display: none; }
         .slide.active { display: block; }
@@ -246,7 +256,7 @@ function persistRoutes(data) {
    ============================================================ */
 let homeMap = null;
 let articleMap = null;
-let homePlacemarks = []; // { id, marker, cardEl }
+let homePlacemarks = []; // { id, marker, el }
 let activeRouteId = null;
 
 async function initHomeMap() {
@@ -270,15 +280,35 @@ async function initHomeMap() {
     // Add markers
     data.routes.forEach(route => {
         const markerEl = document.createElement('div');
+        // Базовый стиль
         markerEl.style.cssText = `
             width: 24px; height: 24px; background: #2f80ed;
             border: 3px solid #fff; border-radius: 50%;
             cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-            transition: transform 0.2s;
+            transition: transform 0.2s, background-color 0.2s;
         `;
+        
+        // Событие клика (переход на статью)
         markerEl.addEventListener('click', (e) => {
             e.stopPropagation();
-            onMarkerClick(route.id);
+            openArticle(route.id);
+        });
+
+        // НОВОЕ: Наведение на метку -> подсветка карточки
+        markerEl.addEventListener('mouseenter', () => {
+            highlightCardOnHover(route.id);
+            markerEl.style.transform = 'scale(1.3)';
+            markerEl.style.backgroundColor = '#f5a623';
+        });
+        
+        // НОВОЕ: Уход с метки -> сброс подсветки
+        markerEl.addEventListener('mouseleave', () => {
+            resetHoverHighlights();
+            // Если метка не активна (статья не открыта), возвращаем ей синий цвет
+            if (activeRouteId !== route.id) {
+                markerEl.style.transform = 'scale(1)';
+                markerEl.style.backgroundColor = '#2f80ed';
+            }
         });
 
         const marker = new YMapMarker(
@@ -288,43 +318,34 @@ async function initHomeMap() {
         homeMap.addChild(marker);
         homePlacemarks.push({ id: route.id, marker, el: markerEl });
     });
-
-    // Auto-select first
-    if (data.routes[0]) {
-        setTimeout(() => onMarkerClick(data.routes[0].id, false), 100);
-    }
 }
 
-function onMarkerClick(routeId, navigate = true) {
-    // Highlight card
-    highlightCard(routeId);
-    // Highlight marker
-    highlightMarker(routeId);
-
-    if (navigate) {
-        openArticle(routeId);
-    }
-}
-
-function highlightCard(routeId) {
-    document.querySelectorAll('.route-card').forEach(c => c.classList.remove('active'));
+/* ============================================================
+   HOVER LOGIC
+   ============================================================ */
+function highlightCardOnHover(routeId) {
     const card = document.querySelector(`.route-card[data-id="${routeId}"]`);
     if (card) {
-        card.classList.add('active');
-        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        card.style.borderColor = '#f5a623'; // Оранжевая рамка при наведении на карту
+        card.style.boxShadow = '0 4px 12px rgba(245, 166, 35, 0.2)';
     }
 }
 
-function highlightMarker(routeId) {
-    activeRouteId = routeId;
+function resetHoverHighlights() {
+    // Убираем подсветку со всех карточек
+    document.querySelectorAll('.route-card').forEach(c => {
+        // Если карточка не активна (пользователь не кликнул по ней), возвращаем обычный стиль
+        if (!c.classList.contains('active')) {
+            c.style.borderColor = ''; // Сбрасываем инлайн-стиль, чтобы работал CSS
+            c.style.boxShadow = '';
+        }
+    });
+    
+    // Сбрасываем стили меток, которые не являются активными
     homePlacemarks.forEach(p => {
-        if (p.id === routeId) {
-            p.el.style.transform = 'scale(1.3)';
-            p.el.style.background = '#f5a623';
-            p.el.style.zIndex = '10';
-        } else {
+        if (p.id !== activeRouteId) {
             p.el.style.transform = 'scale(1)';
-            p.el.style.background = '#2f80ed';
+            p.el.style.backgroundColor = '#2f80ed';
             p.el.style.zIndex = '1';
         }
     });
@@ -366,10 +387,32 @@ function renderHome() {
             </div>
         `;
 
-        // Click on card (but not on slider buttons) -> select on map + open article
+        // Клик по карточке -> переход на статью
         card.addEventListener('click', (e) => {
             if (e.target.classList.contains('slider-btn')) return;
-            onMarkerClick(route.id, true);
+            openArticle(route.id);
+        });
+
+        // НОВОЕ: Наведение на карточку -> подсветка метки
+        card.addEventListener('mouseenter', () => {
+            const markerObj = homePlacemarks.find(p => p.id === route.id);
+            if (markerObj) {
+                markerObj.el.style.transform = 'scale(1.3)';
+                markerObj.el.style.backgroundColor = '#f5a623';
+                markerObj.el.style.zIndex = '10';
+            }
+        });
+
+        // НОВОЕ: Уход с карточки -> сброс подсветки
+        card.addEventListener('mouseleave', () => {
+            if (activeRouteId !== route.id) {
+                const markerObj = homePlacemarks.find(p => p.id === route.id);
+                if (markerObj) {
+                    markerObj.el.style.transform = 'scale(1)';
+                    markerObj.el.style.backgroundColor = '#2f80ed';
+                    markerObj.el.style.zIndex = '1';
+                }
+            }
         });
 
         list.appendChild(card);
@@ -408,6 +451,8 @@ function changeSlide(routeIdx, context, direction, event) {
    ARTICLE PAGE
    ============================================================ */
 async function openArticle(routeId) {
+    activeRouteId = routeId; // Запоминаем, какая статья открыта
+    
     const data = getRoutes();
     const route = data.routes.find(r => r.id === routeId);
     if (!route) return;
@@ -447,7 +492,6 @@ async function openArticle(routeId) {
 
     // Init article map
     if (articleMap) {
-        // Remove old map by clearing container (Yandex API 3 doesn't have destroy, recreate)
         document.getElementById('article-map').innerHTML = '';
         articleMap = null;
     }
@@ -481,8 +525,9 @@ async function openArticle(routeId) {
 function goHome() {
     document.getElementById('page-article').classList.remove('active');
     document.getElementById('page-home').classList.add('active');
-    // Re-highlight current
-    if (activeRouteId) highlightCard(activeRouteId);
+    activeRouteId = null; // Сбрасываем активную статью
+    // Сбрасываем все стили после возврата
+    resetHoverHighlights();
 }
 
 /* ============================================================
@@ -534,7 +579,6 @@ function saveRoute() {
     });
     persistRoutes(currentData);
     closeAdmin();
-    // Reload home to reflect new data
     location.reload();
 }
 
