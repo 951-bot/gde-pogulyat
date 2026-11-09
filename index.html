@@ -247,7 +247,7 @@ const defaultData = {
             id: 1,
             name: "Боровые (жд станция Матанцы)",
             description: "Лесной маршрут в окрестностях деревни Боровые и железнодорожной станции Матанцы. Это тихий уголок природы в нескольких километрах от городской суеты, где преобладают сосновые боры и смешанные леса. Тропа отлично подходит для спокойных прогулок, сбора грибов и ягод, а также для того, чтобы сменить городской пейзаж на тишину леса.\n\nНачало пути у лагеря «Юность» задаёт удобную точку старта — сюда легко добраться на пригородном транспорте или на машине. Маршрут не требует специальной подготовки и будет интересен как семьям с детьми, так и любителям уединённых лесных прогулок.",
-            coords: [58.647463, 49.532364],
+            coords: [58.647463, 49.532364], // ИСПРАВЛЕННЫЕ КООРДИНАТЫ
             photos: [
                 "/photos/borovie/PXL_20261108_102111077.jpg",
                 "/photos/borovie/PXL_20261108_095844515.jpg",
@@ -259,9 +259,9 @@ const defaultData = {
 };
 
 function getRoutes() {
-    const raw = localStorage.getItem('kirov_routes_v5'); // Обновил версию для сброса кэша
+    const raw = localStorage.getItem('kirov_routes_v6'); // Обновил версию кэша, чтобы подтянулись новые координаты
     if (!raw) {
-        localStorage.setItem('kirov_routes_v5', JSON.stringify(defaultData));
+        localStorage.setItem('kirov_routes_v6', JSON.stringify(defaultData));
         return defaultData;
     }
     try {
@@ -272,7 +272,7 @@ function getRoutes() {
 }
 
 function persistRoutes(data) {
-    localStorage.setItem('kirov_routes_v5', JSON.stringify(data));
+    localStorage.setItem('kirov_routes_v6', JSON.stringify(data));
 }
 
 // Функция, которая через сервис wsrv.nl делает легкое превью
@@ -700,4 +700,32 @@ function saveRoute() {
             data.routes[index] = {
                 ...data.routes[index],
                 name,
-               
+                description: desc,
+                coords,
+                photos
+            };
+        }
+    } else {
+        data.routes.push({
+            id: Date.now(),
+            name,
+            description: desc,
+            coords,
+            photos
+        });
+    }
+
+    persistRoutes(data);
+    alert('Сохранено!');
+    backToList();
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+window.addEventListener('load', () => {
+    renderHome();
+    checkAdminRoute();
+});
+window.addEventListener('popstate', checkAdminRoute);
+</script
