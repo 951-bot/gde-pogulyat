@@ -90,7 +90,7 @@
         .back-btn:hover { border-color: var(--accent-color); }
         .article-title { font-size: 32px; font-weight: 700; margin: 0 0 20px; letter-spacing: -0.5px; }
         .article-slider { position: relative; width: 100%; height: 400px; background: #111; border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
-        .article-slider .slide { height: 100%; }
+        .article-slider .slide { height: 100%; object-fit: contain; }
         .article-desc { font-size: 16px; line-height: 1.7; color: var(--text-muted); margin-bottom: 32px; white-space: pre-wrap; }
         .article-map { width: 100%; height: 500px; border-radius: 16px; overflow: hidden; background: #111; border: 1px solid var(--border-color); }
 
@@ -224,7 +224,7 @@
             </div>
             
             <div class="form-group">
-                <label>Фотографии (пути или ссылки)</label>
+                <label>Фотографии (пути к оригиналам)</label>
                 <div id="edit-photos-container"></div>
                 <button class="btn-add-photo" onclick="addPhotoField()">+ Добавить еще одну фотографию</button>
             </div>
@@ -247,7 +247,7 @@ const defaultData = {
             id: 1,
             name: "Боровые (жд станция Матанцы)",
             description: "Лесной маршрут в окрестностях деревни Боровые и железнодорожной станции Матанцы. Это тихий уголок природы в нескольких километрах от городской суеты, где преобладают сосновые боры и смешанные леса. Тропа отлично подходит для спокойных прогулок, сбора грибов и ягод, а также для того, чтобы сменить городской пейзаж на тишину леса.\n\nНачало пути у лагеря «Юность» задаёт удобную точку старта — сюда легко добраться на пригородном транспорте или на машине. Маршрут не требует специальной подготовки и будет интересен как семьям с детьми, так и любителям уединённых лесных прогулок.",
-            coords: [58.6415, 49.5515],
+            coords: [58.647463, 49.532364],
             photos: [
                 "/photos/borovie/PXL_20261108_102111077.jpg",
                 "/photos/borovie/PXL_20261108_095844515.jpg",
@@ -259,9 +259,9 @@ const defaultData = {
 };
 
 function getRoutes() {
-    const raw = localStorage.getItem('kirov_routes_v3');
+    const raw = localStorage.getItem('kirov_routes_v5'); // Обновил версию для сброса кэша
     if (!raw) {
-        localStorage.setItem('kirov_routes_v3', JSON.stringify(defaultData));
+        localStorage.setItem('kirov_routes_v5', JSON.stringify(defaultData));
         return defaultData;
     }
     try {
@@ -272,7 +272,19 @@ function getRoutes() {
 }
 
 function persistRoutes(data) {
-    localStorage.setItem('kirov_routes_v3', JSON.stringify(data));
+    localStorage.setItem('kirov_routes_v5', JSON.stringify(data));
+}
+
+// Функция, которая через сервис wsrv.nl делает легкое превью
+function getOptimizedImage(originalPath) {
+    if (!originalPath) return '';
+    // Если это внешняя ссылка (начинается с http), не трогаем её
+    if (originalPath.startsWith('http')) return originalPath;
+    
+    // Формируем полный URL к картинке на Vercel
+    const fullUrl = window.location.origin + originalPath;
+    // Просим сервис сделать ширину 400px и формат webp
+    return `https://wsrv.nl/?url=${encodeURIComponent(fullUrl)}&w=400&output=webp`;
 }
 
 /* ============================================================
@@ -289,7 +301,7 @@ async function initHomeMap() {
 
     const data = getRoutes();
     const first = data.routes[0];
-    const center = first ? [first.coords[1], first.coords[0]] : [49.5515, 58.6415];
+    const center = first ? [first.coords[1], first.coords[0]] : [49.532364, 58.647463];
 
     homeMap = new YMap(
         document.getElementById('home-map'),
@@ -375,7 +387,9 @@ function renderHome() {
         if (route.photos && route.photos.length > 0) {
             sliderHTML = `<div class="slider-container" id="home-slider-${idx}">`;
             route.photos.forEach((p, pi) => {
-                sliderHTML += `<img src="${p}" class="slide ${pi === 0 ? 'active' : ''}" alt="" onerror="this.style.display='none'">`;
+                // ИСПОЛЬЗУЕМ ОПТИМИЗИРОВАННУЮ ССЫЛКУ ДЛЯ ГЛАВНОЙ
+                const thumbSrc = getOptimizedImage(p);
+                sliderHTML += `<img src="${thumbSrc}" class="slide ${pi === 0 ? 'active' : ''}" alt="" loading="lazy">`;
             });
             if (route.photos.length > 1) {
                 sliderHTML += `
@@ -472,6 +486,7 @@ async function openArticle(routeId) {
     if (route.photos && route.photos.length > 0) {
         route.photos.forEach((p, pi) => {
             const img = document.createElement('img');
+            // В СТАТЬЕ ИСПОЛЬЗУЕМ ОРИГИНАЛ (полный путь)
             img.src = p;
             img.className = 'slide' + (pi === 0 ? ' active' : '');
             img.onerror = () => { img.style.display = 'none'; };
@@ -572,7 +587,9 @@ function renderAdminList() {
         
         let firstPhoto = '';
         if (route.photos && route.photos.length > 0) {
-            firstPhoto = `<img src="${route.photos[0]}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; background:#222;" onerror="this.style.opacity=0">`;
+            // В админке тоже используем оптимизированную ссылку
+            const thumb = getOptimizedImage(route.photos[0]);
+            firstPhoto = `<img src="${thumb}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; background:#222;" onerror="this.style.opacity=0">`;
         } else {
             firstPhoto = `<div style="width:60px; height:60px; background:#222; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10px; color:#555;">Нет фото</div>`;
         }
@@ -683,34 +700,4 @@ function saveRoute() {
             data.routes[index] = {
                 ...data.routes[index],
                 name,
-                description: desc,
-                coords,
-                photos
-            };
-        }
-    } else {
-        data.routes.push({
-            id: Date.now(),
-            name,
-            description: desc,
-            coords,
-            photos
-        });
-    }
-
-    persistRoutes(data);
-    alert('Сохранено!');
-    backToList();
-}
-
-/* ============================================================
-   INIT
-   ============================================================ */
-window.addEventListener('load', () => {
-    renderHome();
-    checkAdminRoute();
-});
-window.addEventListener('popstate', checkAdminRoute);
-</script>
-</body>
-</html>
+               
