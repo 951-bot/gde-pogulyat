@@ -41,11 +41,9 @@
             overflow-y: auto;
             scroll-behavior: smooth;
         }
-        .header { padding: 32px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start; }
+        .header { padding: 32px 24px; border-bottom: 1px solid var(--border-color); }
         .header h1 { font-size: 24px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.5px; }
         .header p { color: var(--text-muted); margin: 0; font-size: 14px; }
-        .admin-link { color: var(--text-muted); text-decoration: none; font-size: 13px; padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 6px; transition: 0.2s; }
-        .admin-link:hover { color: var(--text-main); border-color: var(--accent-color); }
         
         .routes-list { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
         
@@ -145,11 +143,8 @@
     <div class="home-layout">
         <div class="sidebar">
             <div class="header">
-                <div>
-                    <h1>Маршруты Кирова</h1>
-                    <p>Пешие тропы и природные зоны</p>
-                </div>
-                <a href="/admin" class="admin-link">Вход</a>
+                <h1>Маршруты Кирова</h1>
+                <p>Пешие тропы и природные зоны</p>
             </div>
             <div class="routes-list" id="routes-list"></div>
         </div>
@@ -259,9 +254,9 @@ const defaultData = {
 };
 
 function getRoutes() {
-    const raw = localStorage.getItem('kirov_routes_v6'); // Обновил версию кэша, чтобы подтянулись новые координаты
+    const raw = localStorage.getItem('kirov_routes_v7'); // Обновил версию кэша
     if (!raw) {
-        localStorage.setItem('kirov_routes_v6', JSON.stringify(defaultData));
+        localStorage.setItem('kirov_routes_v7', JSON.stringify(defaultData));
         return defaultData;
     }
     try {
@@ -272,18 +267,14 @@ function getRoutes() {
 }
 
 function persistRoutes(data) {
-    localStorage.setItem('kirov_routes_v6', JSON.stringify(data));
+    localStorage.setItem('kirov_routes_v7', JSON.stringify(data));
 }
 
-// Функция, которая через сервис wsrv.nl делает легкое превью
+// Функция для создания легкого превью через wsrv.nl
 function getOptimizedImage(originalPath) {
     if (!originalPath) return '';
-    // Если это внешняя ссылка (начинается с http), не трогаем её
     if (originalPath.startsWith('http')) return originalPath;
-    
-    // Формируем полный URL к картинке на Vercel
     const fullUrl = window.location.origin + originalPath;
-    // Просим сервис сделать ширину 400px и формат webp
     return `https://wsrv.nl/?url=${encodeURIComponent(fullUrl)}&w=400&output=webp`;
 }
 
@@ -387,7 +378,6 @@ function renderHome() {
         if (route.photos && route.photos.length > 0) {
             sliderHTML = `<div class="slider-container" id="home-slider-${idx}">`;
             route.photos.forEach((p, pi) => {
-                // ИСПОЛЬЗУЕМ ОПТИМИЗИРОВАННУЮ ССЫЛКУ ДЛЯ ГЛАВНОЙ
                 const thumbSrc = getOptimizedImage(p);
                 sliderHTML += `<img src="${thumbSrc}" class="slide ${pi === 0 ? 'active' : ''}" alt="" loading="lazy">`;
             });
@@ -486,7 +476,6 @@ async function openArticle(routeId) {
     if (route.photos && route.photos.length > 0) {
         route.photos.forEach((p, pi) => {
             const img = document.createElement('img');
-            // В СТАТЬЕ ИСПОЛЬЗУЕМ ОРИГИНАЛ (полный путь)
             img.src = p;
             img.className = 'slide' + (pi === 0 ? ' active' : '');
             img.onerror = () => { img.style.display = 'none'; };
@@ -587,7 +576,6 @@ function renderAdminList() {
         
         let firstPhoto = '';
         if (route.photos && route.photos.length > 0) {
-            // В админке тоже используем оптимизированную ссылку
             const thumb = getOptimizedImage(route.photos[0]);
             firstPhoto = `<img src="${thumb}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; background:#222;" onerror="this.style.opacity=0">`;
         } else {
@@ -728,4 +716,6 @@ window.addEventListener('load', () => {
     checkAdminRoute();
 });
 window.addEventListener('popstate', checkAdminRoute);
-</script
+</script>
+</body>
+</html>
