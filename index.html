@@ -1,3 +1,8 @@
+Понял вас. Уменьшаем карту на мобильных до 30% от высоты экрана (30vh), чтобы она не перекрывала контент и не занимала много места.
+
+Ниже полный код файла index.html. Скопируйте его целиком и замените ваш текущий на GitHub/Vercel.
+
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -152,10 +157,27 @@
         .btn-add-photo { background: transparent; border: 1px dashed var(--border-color); color: var(--text-muted); width: 100%; padding: 10px; border-radius: 8px; cursor: pointer; margin-top: 4px; }
         .btn-add-photo:hover { border-color: var(--accent-color); color: var(--text-main); }
 
+        /* ===== Mobile (iOS fix & size) ===== */
         @media (max-width: 900px) {
-            .home-layout { display: flex; flex-direction: column; height: auto; }
-            .map-container { width: 100%; height: 400px; order: -1; position: sticky; top: 0; z-index: 100; }
-            .sidebar { width: 100%; height: auto; border-right: none; }
+            .home-layout { 
+                display: flex; 
+                flex-direction: column; 
+                height: auto; 
+            }
+            .map-container { 
+                width: 100%; 
+                height: 30vh; /* Карта занимает ровно 30% высоты экрана */
+                min-height: 220px; /* Защита от слишком маленькой высоты на старых телефонах */
+                order: -1; 
+                position: sticky; 
+                top: 0; 
+                z-index: 100; 
+            }
+            .sidebar { 
+                width: 100%; 
+                height: auto; 
+                border-right: none; 
+            }
             .article-slider { height: 250px; }
             .article-map { height: 350px; }
         }
@@ -814,3 +836,4 @@ window.addEventListener('popstate', checkAdminRoute);
 </script>
 </body>
 </html>
+```
